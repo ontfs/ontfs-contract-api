@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ontio/ontfs-contract-api/utils"
+	apiComm "github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontology-crypto/keypair"
 	ontSdk "github.com/ontio/ontology-go-sdk"
 	"github.com/ontio/ontology/common"
@@ -78,8 +78,7 @@ func (c *OntFsClient) GetGlobalParam() (*fs.FsGlobalParam, error) {
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
 		src := common.NewZeroCopySource(retInfo.Info)
-		err = globalParam.Deserialization(src)
-		if err != nil {
+		if err = globalParam.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetGlobalParam error: %s", err.Error())
 		}
 		return &globalParam, nil
@@ -97,7 +96,7 @@ func (c *OntFsClient) GetNodeInfoList() (*fs.FsNodeInfoList, error) {
 	}
 	data, err := ret.Result.ToByteArray()
 	if err != nil {
-		return nil, fmt.Errorf("GetNodeList result toByteArray: %s", err.Error())
+		return nil, fmt.Errorf("GetNodeInfoList result toByteArray: %s", err.Error())
 	}
 
 	var nodeInfoList fs.FsNodeInfoList
@@ -105,7 +104,7 @@ func (c *OntFsClient) GetNodeInfoList() (*fs.FsNodeInfoList, error) {
 	if retInfo.Ret {
 		src := common.NewZeroCopySource(retInfo.Info)
 		if err = nodeInfoList.Deserialization(src); err != nil {
-			return nil, fmt.Errorf("GetNodeList json Unmarshal: %s", err.Error())
+			return nil, fmt.Errorf("GetNodeInfoList Deserialization: %s", err.Error())
 		}
 		return &nodeInfoList, nil
 	} else {
@@ -119,7 +118,7 @@ func (c *OntFsClient) StoreFile(fileHash string, fileBlockCount uint64, timeExpi
 		return nil, errors.New("DefAcc is nil")
 	}
 
-	fileInfo := &fs.FileInfo{
+	fileInfo := fs.FileInfo{
 		FileHash:       []byte(fileHash),
 		FileOwner:      c.DefAcc.Address,
 		FileDesc:       fileDesc,
@@ -130,8 +129,14 @@ func (c *OntFsClient) StoreFile(fileHash string, fileBlockCount uint64, timeExpi
 		PdpParam:       pdpParam,
 		StorageType:    storageType,
 	}
+	fileInfoList := fs.FileInfoList{}
+	fileInfoList.FilesI = append(fileInfoList.FilesI, fileInfo)
+
+	sink := common.NewZeroCopySink(nil)
+	fileInfoList.Serialization(sink)
+
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
-		fs.FS_STORE_FILES, []interface{}{fileInfo})
+		fs.FS_STORE_FILES, []interface{}{sink.Bytes()})
 	if err != nil {
 		return nil, err
 	}
@@ -142,15 +147,21 @@ func (c *OntFsClient) RenewFile(fileHashStr string, renewTimes uint64) ([]byte, 
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
 	}
-	fileHash := []byte(fileHashStr)
-	fileRenew := &fs.FileReNew{
-		FileHash:       fileHash,
+
+	fileRenew := fs.FileReNew{
+		FileHash:       []byte(fileHashStr),
 		FileOwner:      c.WalletAddr,
 		Payer:          c.WalletAddr,
 		NewTimeExpired: renewTimes,
 	}
+	fileReNewList := fs.FileReNewList{}
+	fileReNewList.FilesReNew = append(fileReNewList.FilesReNew, fileRenew)
+
+	sink := common.NewZeroCopySink(nil)
+	fileReNewList.Serialization(sink)
+
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc,
-		contractVersion, contractAddr, fs.FS_RENEW_FILES, []interface{}{fileRenew},
+		contractVersion, contractAddr, fs.FS_RENEW_FILES, []interface{}{sink.Bytes()},
 	)
 	if err != nil {
 		return nil, err
@@ -163,17 +174,13 @@ func (c *OntFsClient) DeleteFiles(fileHashStrs []string) ([]byte, error) {
 		return nil, errors.New("DefAcc is nil")
 	}
 
-	fileHashes := make([]fs.FileHash, 0, len(fileHashStrs))
+	var fileDelList fs.FileDelList
 	for _, fileHashStr := range fileHashStrs {
-		fileHashes = append(fileHashes, fs.FileHash{
-			FHash: []byte(fileHashStr),
-		})
+		fileDelList.FilesDel = append(fileDelList.FilesDel, fs.FileDel{FileHash:[]byte(fileHashStr)})
 	}
-	fileList := fs.FileHashList{
-		FilesH: fileHashes,
-	}
+
 	sink := common.NewZeroCopySink(nil)
-	fileList.Serialization(sink)
+	fileDelList.Serialization(sink)
 
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
 		fs.FS_DELETE_FILES, []interface{}{sink.Bytes()})
@@ -213,14 +220,19 @@ func (c *OntFsClient) ChangeFileOwner(fileHashStr string, newOwner common.Addres
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
 	}
-	fileHash := []byte(fileHashStr)
-	ownerChange := &fs.FileTransfer{
-		FileHash: fileHash,
+	fileTransfer := fs.FileTransfer{
+		FileHash: []byte(fileHashStr),
 		OriOwner: c.DefAcc.Address,
 		NewOwner: newOwner,
 	}
+	fileTransferList := fs.FileTransferList{}
+	fileTransferList.FilesTransfer = append(fileTransferList.FilesTransfer, fileTransfer)
+
+	sink := common.NewZeroCopySink(nil)
+	fileTransferList.Serialization(sink)
+
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
-		fs.FS_TRANSFER_FILES, []interface{}{ownerChange})
+		fs.FS_TRANSFER_FILES, []interface{}{sink.Bytes()})
 	if err != nil {
 		return nil, err
 	}
@@ -242,11 +254,10 @@ func (c *OntFsClient) GetFileList() (*fs.FileHashList, error) {
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
 		src := common.NewZeroCopySource(retInfo.Info)
-		err = fileList.Deserialization(src)
-		if err != nil {
+		if err = fileList.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetFileList error: %s", err.Error())
 		}
-		return &fileList, err
+		return &fileList, nil
 	} else {
 		return nil, errors.New(string(retInfo.Info))
 	}
@@ -269,8 +280,7 @@ func (c *OntFsClient) GetFilePdpRecordList(fileHashStr string) (*fs.PdpRecordLis
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
 		src := common.NewZeroCopySource(retInfo.Info)
-		err = pdpRecordList.Deserialization(src)
-		if err != nil {
+		if err = pdpRecordList.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetFilePdpRecordList deserialize error: %s", err.Error())
 		}
 		return &pdpRecordList, err
@@ -390,7 +400,7 @@ func (c *OntFsClient) GenFileReadSettleSlice(fileHash []byte, payTo common.Addre
 	sink := common.NewZeroCopySink(nil)
 	settleSlice.Serialization(sink)
 
-	signData, err := utils.Sign(c.DefAcc, sink.Bytes())
+	signData, err := apiComm.Sign(c.DefAcc, sink.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("FileReadSettleSlice Sign error: %s", err.Error())
 	}

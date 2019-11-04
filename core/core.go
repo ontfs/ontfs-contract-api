@@ -100,8 +100,7 @@ func (d *OntFs) GetGlobalParam() (*fs.FsGlobalParam, error) {
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
 		src := common.NewZeroCopySource(retInfo.Info)
-		err = globalParam.Deserialization(src)
-		if err != nil {
+		if err = globalParam.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetGlobalParam error: %s", err.Error())
 		}
 		return &globalParam, nil
@@ -116,7 +115,7 @@ func (d *OntFs) NodeRegister(volume uint64, serviceTime uint64, nodeNetAddr stri
 	}
 	ret, err := d.OntSdk.Native.InvokeNativeContract(d.GasPrice, d.GasLimit, d.DefAcc, contractVersion, contractAddr,
 		fs.FS_NODE_REGISTER, []interface{}{&fs.FsNodeInfo{Pledge: 0, Profit: 0, Volume: volume, RestVol: 0,
-			ServiceTime: serviceTime, NodeAddr: d.DefAcc.Address, NodeNetAddr: []byte(nodeNetAddr)}})
+			ServiceTime: serviceTime, NodeAddr: d.WalletAddr, NodeNetAddr: []byte(nodeNetAddr)}})
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +137,7 @@ func (d *OntFs) NodeQuery(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
 		src := common.NewZeroCopySource(retInfo.Info)
-		err = fsNodeInfo.Deserialization(src)
-		if err != nil {
+		if err = fsNodeInfo.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("NodeQuery error: %s", err.Error())
 		}
 		return &fsNodeInfo, nil
@@ -154,7 +152,7 @@ func (d *OntFs) NodeUpdate(volume uint64, serviceTime uint64, nodeNetAddr string
 	}
 	ret, err := d.OntSdk.Native.InvokeNativeContract(d.GasPrice, d.GasLimit, d.DefAcc, contractVersion, contractAddr,
 		fs.FS_NODE_UPDATE, []interface{}{&fs.FsNodeInfo{Pledge: 0, Profit: 0, Volume: volume, RestVol: 0,
-			ServiceTime: serviceTime, NodeAddr: d.DefAcc.Address, NodeNetAddr: []byte(nodeNetAddr)}},
+			ServiceTime: serviceTime, NodeAddr: d.WalletAddr, NodeNetAddr: []byte(nodeNetAddr)}},
 	)
 	if err != nil {
 		return nil, err
@@ -167,7 +165,7 @@ func (d *OntFs) NodeCancel() ([]byte, error) {
 		return nil, errors.New("NodeCancel DefAcc is nil")
 	}
 	ret, err := d.OntSdk.Native.InvokeNativeContract(d.GasPrice, d.GasLimit, d.DefAcc, contractVersion, contractAddr,
-		fs.FS_NODE_CANCEL, []interface{}{d.DefAcc.Address})
+		fs.FS_NODE_CANCEL, []interface{}{d.WalletAddr})
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +177,7 @@ func (d *OntFs) NodeWithDrawProfit() ([]byte, error) {
 		return nil, errors.New("NodeWithDrawProfit DefAcc is nil")
 	}
 	ret, err := d.OntSdk.Native.InvokeNativeContract(d.GasPrice, d.GasLimit, d.DefAcc, contractVersion, contractAddr,
-		fs.FS_NODE_WITH_DRAW_PROFIT, []interface{}{d.DefAcc.Address},
+		fs.FS_NODE_WITH_DRAW_PROFIT, []interface{}{d.WalletAddr},
 	)
 	if err != nil {
 		return nil, err
@@ -222,7 +220,7 @@ func (d *OntFs) FileProve(fileHashStr string, multiRes []byte, addResStr string,
 	ret, err := d.OntSdk.Native.InvokeNativeContract(d.GasPrice, d.GasLimit, d.DefAcc, contractVersion, contractAddr,
 		fs.FS_FILE_PROVE, []interface{}{&fs.PdpData{
 			FileHash:        fileHash,
-			NodeAddr:        d.DefAcc.Address,
+			NodeAddr:        d.WalletAddr,
 			MultiRes:        multiRes,
 			AddRes:          addRes,
 			ChallengeHeight: blockHeight,
@@ -316,8 +314,7 @@ func (d *OntFs) GetFilePdpRecordList(fileHashStr string) (*fs.PdpRecordList, err
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
 		src := common.NewZeroCopySource(retInfo.Info)
-		err = pdpRecordList.Deserialization(src)
-		if err != nil {
+		if err = pdpRecordList.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetFilePdpRecordList deserialize error: %s", err.Error())
 		}
 		return &pdpRecordList, err

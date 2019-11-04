@@ -1,14 +1,17 @@
-package utils
+package common
 
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
+	"encoding/hex"
 	"github.com/ontio/ontology-crypto/keypair"
 	s "github.com/ontio/ontology-crypto/signature"
 	ont "github.com/ontio/ontology-go-sdk"
 	"github.com/ontio/ontology/common"
 	fs "github.com/ontio/ontology/smartcontract/service/native/ontfs"
+	"strings"
 )
 
 func Sign(acc *ont.Account, data []byte) ([]byte, error) {
@@ -52,7 +55,7 @@ func PdpParamDeserialize(pdpParamData []byte) (*fs.PdpParam, error) {
 	var pdpParam fs.PdpParam
 	src := common.NewZeroCopySource(pdpParamData)
 	if err := pdpParam.Deserialization(src); err != nil {
-		return nil, fmt.Errorf("PdpParamDeserialize Deserialize error: %s", err.Error())
+		return nil, fmt.Errorf("PdpParamDeserialize error: %s", err.Error())
 	}
 	return &pdpParam, nil
 }
@@ -76,7 +79,38 @@ func FileReadSettleSliceDeserialize(fileReadSettleSliceData []byte) (*fs.FileRea
 	var fileReadSettleSlice fs.FileReadSettleSlice
 	src := common.NewZeroCopySource(fileReadSettleSliceData)
 	if err := fileReadSettleSlice.Deserialization(src); err != nil {
-		return nil, fmt.Errorf("FileReadSettleSlice Deserialize error: %s", err.Error())
+		return nil, fmt.Errorf("FileReadSettleSliceDeserialize error: %s", err.Error())
 	}
 	return &fileReadSettleSlice, nil
+}
+
+func PrintStruct(st interface{}) {
+	dataType := reflect.TypeOf(st)
+	dataValue := reflect.ValueOf(st)
+	fmt.Printf("[=====%s======]\n", dataType.Name())
+
+	num := dataType.NumField()
+	for id := 0; id < num; id++ {
+		field := dataType.Field(id)
+		fieldName := field.Name
+		value := dataValue.FieldByName(fieldName)
+		if 0 == strings.Compare(fieldName, "NodeNetAddr") {
+			fmt.Printf("-[%-20s]:\t %s\n", fieldName, value)
+		} else if 0 == strings.Compare(fieldName, "NodeAddr") {
+			hexAddr := fmt.Sprintf("%x", value)
+			addr, err := hex.DecodeString(hexAddr)
+			if err != nil {
+				fmt.Printf("PrintStruct error NodeAddr DecodeString error")
+				continue
+			} else {
+				var nodeAddr common.Address
+				copy(nodeAddr[:], addr[:])
+				fmt.Printf("-[%-20s]:\t %s\n", fieldName, nodeAddr.ToBase58())
+			}
+		} else if reflect.TypeOf(value).String() == "struct" {
+			PrintStruct(value)
+		} else {
+			fmt.Printf("-[%-20s]:\t %v\n", fieldName, value)
+		}
+	}
 }
