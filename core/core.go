@@ -262,12 +262,12 @@ func (d *OntFs) GetFileReadPledge(fileHashStr string, downloader common.Address)
 	}
 }
 
-func (d *OntFs) FileReadProfitSettle(fileReadSettleSlice fs.FileReadSettleSlice) ([]byte, error) {
+func (d *OntFs) FileReadProfitSettle(fileReadSettleSlice *fs.FileReadSettleSlice) ([]byte, error) {
 	if d.DefAcc == nil {
 		return nil, errors.New("FileReadProfitSettle DefAcc is nil")
 	}
 	ret, err := d.OntSdk.Native.InvokeNativeContract(d.GasPrice, d.GasLimit, d.DefAcc, contractVersion, contractAddr,
-		fs.FS_READ_FILE_SETTLE, []interface{}{&fileReadSettleSlice},
+		fs.FS_READ_FILE_SETTLE, []interface{}{fileReadSettleSlice},
 	)
 	if err != nil {
 		return nil, err
@@ -275,7 +275,7 @@ func (d *OntFs) FileReadProfitSettle(fileReadSettleSlice fs.FileReadSettleSlice)
 	return ret.ToArray(), err
 }
 
-func (d *OntFs) VerifyFileReadSettleSlice(settleSlice fs.FileReadSettleSlice) (bool, error) {
+func (d *OntFs) VerifyFileReadSettleSlice(settleSlice *fs.FileReadSettleSlice) (bool, error) {
 	tmpSettleSlice := fs.FileReadSettleSlice{
 		FileHash: settleSlice.FileHash,
 		PayFrom:  settleSlice.PayFrom,

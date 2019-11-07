@@ -342,18 +342,21 @@ func (c *OntFsClient) FileReadPledge(fileHashStr string, readPlans []fs.ReadPlan
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
 	}
-	fileHash := []byte(fileHashStr)
 
 	fileReadPledge := &fs.ReadPledge{
-		FileHash:     fileHash,
+		FileHash:     []byte(fileHashStr),
 		Downloader:   c.DefAcc.Address,
 		BlockHeight:  0,
 		ExpireHeight: 0,
 		RestMoney:    0,
 		ReadPlans:    readPlans,
 	}
+
+	sink := common.NewZeroCopySink(nil)
+	fileReadPledge.Serialization(sink)
+
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
-		fs.FS_READ_FILE_PLEDGE, []interface{}{fileReadPledge})
+		fs.FS_READ_FILE_PLEDGE, []interface{}{sink.Bytes()})
 	if err != nil {
 		return nil, err
 	}

@@ -60,16 +60,7 @@ func PdpParamDeserialize(pdpParamData []byte) (*fs.PdpParam, error) {
 	return &pdpParam, nil
 }
 
-func FileReadSettleSliceSerialize(fileHash []byte, payFrom common.Address,
-	payTo common.Address, sliceId uint64, sig []byte, pubKey []byte) []byte {
-	fileReadSettleSlice := fs.FileReadSettleSlice{
-		FileHash: fileHash,
-		PayFrom:  payFrom,
-		PayTo:    payTo,
-		SliceId:  sliceId,
-		Sig:      sig,
-		PubKey:   pubKey,
-	}
+func FileReadSettleSliceSerialize(fileReadSettleSlice *fs.FileReadSettleSlice) []byte {
 	sink := common.NewZeroCopySink(nil)
 	fileReadSettleSlice.Serialization(sink)
 	return sink.Bytes()
@@ -96,7 +87,8 @@ func PrintStruct(st interface{}) {
 		value := dataValue.FieldByName(fieldName)
 		if 0 == strings.Compare(fieldName, "NodeNetAddr") {
 			fmt.Printf("-[%-20s]:\t %s\n", fieldName, value)
-		} else if 0 == strings.Compare(fieldName, "NodeAddr") {
+		} else if 0 == strings.Compare(fieldName, "NodeAddr") ||
+			0 == strings.Compare(fieldName, "FileOwner") {
 			hexAddr := fmt.Sprintf("%x", value)
 			addr, err := hex.DecodeString(hexAddr)
 			if err != nil {

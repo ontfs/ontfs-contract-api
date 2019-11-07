@@ -1,16 +1,18 @@
 package main
 
 import (
-	"encoding/hex"
-	"flag"
-	"github.com/ontio/ontfs-contract-api/client"
-	"github.com/ontio/ontfs-contract-api/common"
-	"github.com/ontio/ontology-go-sdk/utils"
-	"github.com/ontio/ontology/common/log"
-	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
 	"os"
 	"sync"
 	"time"
+	"encoding/hex"
+	"flag"
+
+	"github.com/ontio/ontology/common/log"
+	"github.com/ontio/ontfs-contract-api/client"
+	"github.com/ontio/ontfs-contract-api/common"
+	"github.com/ontio/ontology-go-sdk/utils"
+	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
+
 )
 
 const TestFileHash = "FileTest"
@@ -27,6 +29,7 @@ var action = struct {
 	getFileInfo     bool
 	renewFile       bool
 	delFile         bool
+	readFile        bool
 	getPdpInfoList  bool
 	changeOwner     bool
 	fileHash        string
@@ -42,6 +45,7 @@ func main() {
 	flag.BoolVar(&action.renewFile, "renewFile", false, "renewFile")
 	flag.BoolVar(&action.getPdpInfoList, "getPdpInfoList", false, "getPdpInfoList")
 	flag.BoolVar(&action.delFile, "delFile", false, "delFile")
+	flag.BoolVar(&action.readFile, "readFile", false, "readFile")
 	flag.BoolVar(&action.changeOwner, "changeOwner", false, "changeOwner")
 	flag.StringVar(&action.fileHash, "fileHash", TestFileHash, "   -fileHash")
 	flag.StringVar(&action.newOwner, "newOwner", "", "   changeOwner - newOwner")
@@ -67,6 +71,8 @@ func main() {
 		RenewFile(action.fileHash)
 	} else if action.delFile {
 		DeleteFile(action.fileHash)
+	} else if action.readFile {
+		ReadFile(action.fileHash)
 	} else if action.changeOwner {
 		ChangeOwner(action.fileHash, action.newOwner)
 	} else if action.getPdpInfoList {
@@ -110,7 +116,8 @@ func GetFileList() {
 }
 
 func StoreFile() {
-	txHash, err := fsClient.StoreFile(TestFileHash, 256, 1580000000, 1, []byte(TestFileHash),
+	timeExpire := uint64(time.Now().Unix()) + 3600
+	txHash, err := fsClient.StoreFile(TestFileHash, 256, timeExpire, 1, []byte(TestFileHash),
 		[]byte(TestFileHash), ontfs.FileStorageTypeUseFile, 256*256+256)
 	if err != nil {
 		log.Error("StoreFile error: ", err.Error())
@@ -137,7 +144,7 @@ func StoreFile() {
 	},
 	)
 
-	if err = sendToFs("StoreFile" + "|" + hex.EncodeToString(txHash)); err != nil {
+	if err = sendToFs("StoreFile" + "|" + TestFileHash); err != nil {
 		log.Error("sendToFs error: ", err.Error())
 		return
 	}
@@ -214,7 +221,7 @@ func ChangeOwner(fileHash string, newOwner string) {
 	fsClient.PollForTxConfirmed(14*time.Second, ownerChangeTx)
 
 	fileInfo, err := fsClient.GetFileInfo(fileHash)
-	if err == nil {
+	if err != nil {
 		log.Error("ChangeOwner failed err is nil")
 		return
 	}
@@ -235,4 +242,79 @@ func GetPdpInfoList(fileHash string) {
 			common.PrintStruct(pdpRecord)
 		}
 	}
+}
+
+func ReadFile(fileHash string) {
+	fileInfo, err := fsClient.GetFileInfo(fileHash)
+	if err != nil {
+		log.Errorf("StoreFile GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
+		return
+	} else if fileInfo == nil {
+		log.Error("StoreFile GetFileInfo failed, fileInfo is nil")
+		return
+	}
+
+	pdpRecordList, err := fsClient.GetFilePdpRecordList(fileHash)
+	if err != nil {
+		log.Errorf("APP GetFilePdpRecordList error: %s", err.Error())
+		return
+	} else {
+		for _, pdpRecord := range pdpRecordList.PdpRecords {
+			common.PrintStruct(pdpRecord)
+		}
+	}
+
+	readPlans := []ontfs.ReadPlan{
+		{
+			NodeAddr: pdpRecordList.PdpRecords[0].NodeAddr,
+			MaxReadBlockNum: fileInfo.FileBlockCount,
+			HaveReadBlockNum: 0,
+		},
+	}
+	readTx, err := fsClient.FileReadPledge(fileHash, readPlans)
+	if err != nil {
+		log.Error("FileReadPledge failed error: ", err.Error())
+		return
+	}
+	fsClient.PollForTxConfirmed(14*time.Second, readTx)
+
+	haveReadBlockNum := uint64(0)
+	readPledge, err := fsClient.GetFileReadPledge(fileHash, fsClient.WalletAddr)
+	if err != nil {
+		log.Error("GetFileReadPledge failed error: ", err.Error())
+		return
+	}
+	for _, readPlan := range readPledge.ReadPlans  {
+		if readPlan.NodeAddr == fsClient.WalletAddr {
+			haveReadBlockNum = readPlan.HaveReadBlockNum
+		}
+	}
+
+	once.Do(func() {
+		if err := connectFs(); err != nil {
+			log.Error("connectFs error: ", err.Error())
+			os.Exit(0)
+		}
+		log.Info("connection success")
+	},
+	)
+
+	if err = sendToFs("ReadFile" + "|" + fileHash + "|" + fsClient.WalletAddr.ToBase58()); err != nil {
+		log.Error("sendToFs error: ", err.Error())
+		return
+	}
+
+	for i := uint64(0); i < fileInfo.FileBlockCount; i++ {
+		fileReadSlice, err := fsClient.GenFileReadSettleSlice([]byte(fileHash), readPlans[0].NodeAddr, i + haveReadBlockNum)
+		if err != nil {
+			log.Errorf("GenFileReadSettleSlice error: %s", err.Error())
+			return
+		}
+		sliceData := common.FileReadSettleSliceSerialize(fileReadSlice)
+		sliceString := hex.EncodeToString(sliceData)
+
+		log.Info("sendToFs FileReadSettleSlice")
+		sendToFs(sliceString)
+	}
+	closeConn()
 }

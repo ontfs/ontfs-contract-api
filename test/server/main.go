@@ -9,6 +9,8 @@ import (
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
 )
 
+const TestFileHash = "FileTest"
+
 var fsCore *core.OntFs
 var globalParam *ontfs.FsGlobalParam
 
@@ -31,7 +33,7 @@ func main() {
 	flag.BoolVar(&action.nodeCancel, "nodeCancel", false, "nodeCancel")
 	flag.BoolVar(&action.withdrawProfit, "withdraw", false, "withdrawProfit")
 	flag.BoolVar(&action.getFileInfo, "getFileInfo", false, "getFileInfo")
-	flag.StringVar(&action.fileHash, "fileHash", "", "   getFileInfo - fileHash")
+	flag.StringVar(&action.fileHash, "fileHash", TestFileHash, "fileHash")
 	flag.Parse()
 
 	fsCore = core.Init("./wallet.dat", "pwd", "http://localhost:20336")
