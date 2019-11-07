@@ -32,6 +32,10 @@ var action = struct {
 	readFile        bool
 	getPdpInfoList  bool
 	changeOwner     bool
+	createSpace     bool
+	updateSpace     bool
+	deleteSpace     bool
+	getSpaceInfo    bool
 	fileHash        string
 	newOwner        string
 }{}
@@ -39,14 +43,22 @@ var action = struct {
 func main() {
 	flag.BoolVar(&action.getGlobalParam, "getGlobalParam", false, "getGlobalParam")
 	flag.BoolVar(&action.getNodeInfoList, "getNodeInfoList", false, "getNodeInfoList")
+	flag.BoolVar(&action.getPdpInfoList, "getPdpInfoList", false, "getPdpInfoList")
+
 	flag.BoolVar(&action.getFileList, "getFileList", false, "getFileList")
+
 	flag.BoolVar(&action.storeFile, "storeFile", false, "storeFile")
 	flag.BoolVar(&action.getFileInfo, "getFileInfo", false, "getFileInfo")
 	flag.BoolVar(&action.renewFile, "renewFile", false, "renewFile")
-	flag.BoolVar(&action.getPdpInfoList, "getPdpInfoList", false, "getPdpInfoList")
 	flag.BoolVar(&action.delFile, "delFile", false, "delFile")
 	flag.BoolVar(&action.readFile, "readFile", false, "readFile")
 	flag.BoolVar(&action.changeOwner, "changeOwner", false, "changeOwner")
+
+	flag.BoolVar(&action.createSpace, "createSpace", false, "createSpace")
+	flag.BoolVar(&action.updateSpace, "updateSpace", false, "updateSpace")
+	flag.BoolVar(&action.deleteSpace, "deleteSpace", false, "deleteSpace")
+	flag.BoolVar(&action.getSpaceInfo, "getSpaceInfo", false, "getSpaceInfo")
+
 	flag.StringVar(&action.fileHash, "fileHash", TestFileHash, "   -fileHash")
 	flag.StringVar(&action.newOwner, "newOwner", "", "   changeOwner - newOwner")
 	flag.Parse()
@@ -77,6 +89,79 @@ func main() {
 		ChangeOwner(action.fileHash, action.newOwner)
 	} else if action.getPdpInfoList {
 		GetPdpInfoList(action.fileHash)
+	} else if action.createSpace {
+		CreateSpace()
+	} else if action.getSpaceInfo {
+		GetSpaceInfo()
+	} else if action.deleteSpace {
+		DeleteSpace()
+	} else if action.updateSpace {
+		UpdateSpace()
+	}
+}
+
+func CreateSpace() {
+	timeExpired := uint64(time.Now().Unix()) + 3600 * 24
+	txHash, err := fsClient.CreateSpace(1024 * 1024, 3, timeExpired)
+	if err != nil {
+		log.Error("CreateSpace error: ", err.Error())
+		return
+	}
+	fsClient.PollForTxConfirmed(15*time.Second, txHash)
+	GetSpaceInfo()
+}
+
+func GetSpaceInfo() {
+	spaceInfo, err := fsClient.GetSpaceInfo()
+	if err != nil {
+		log.Error("GetSpaceInfo error: ", err.Error())
+		return
+	}
+	common.PrintStruct(*spaceInfo)
+}
+
+func DeleteSpace() {
+	txHash, err := fsClient.DeleteSpace()
+	if err != nil {
+		log.Error("DeleteSpace error: ", err.Error())
+		return
+	}
+	fsClient.PollForTxConfirmed(15*time.Second, txHash)
+	spaceInfo, err := fsClient.GetSpaceInfo()
+	if err != nil && spaceInfo == nil{
+		log.Info("DeleteSpace success")
+	} else {
+		log.Error("DeleteSpace failed")
+	}
+}
+
+func UpdateSpace() {
+	spaceInfo1, err := fsClient.GetSpaceInfo()
+	if err != nil {
+		log.Error("UpdateSpace GetSpaceInfo1 error: ", err.Error())
+		return
+	}
+	common.PrintStruct(*spaceInfo1)
+
+	timeExpired := uint64(time.Now().Unix()) + 3600 * 24
+	txHash, err := fsClient.UpdateSpace(1024 * 2048, timeExpired)
+	if err != nil {
+		log.Error("UpdateSpace error: ", err.Error())
+		return
+	}
+	fsClient.PollForTxConfirmed(15*time.Second, txHash)
+
+	spaceInfo2, err := fsClient.GetSpaceInfo()
+	if err != nil {
+		log.Error("UpdateSpace GetSpaceInfo2 error: ", err.Error())
+		return
+	}
+	common.PrintStruct(*spaceInfo2)
+
+	if spaceInfo1.Volume != spaceInfo2.Volume && spaceInfo1.TimeExpired != spaceInfo2.TimeExpired {
+		log.Info("UpdateSpace Success")
+	} else {
+		log.Error("UpdateSpace Failed")
 	}
 }
 
@@ -116,8 +201,8 @@ func GetFileList() {
 }
 
 func StoreFile() {
-	timeExpire := uint64(time.Now().Unix()) + 3600
-	txHash, err := fsClient.StoreFile(TestFileHash, 256, timeExpire, 1, []byte(TestFileHash),
+	timeExpired := uint64(time.Now().Unix()) + 3600
+	txHash, err := fsClient.StoreFile(TestFileHash, 256, timeExpired, 1, []byte(TestFileHash),
 		[]byte(TestFileHash), ontfs.FileStorageTypeUseFile, 256*256+256)
 	if err != nil {
 		log.Error("StoreFile error: ", err.Error())

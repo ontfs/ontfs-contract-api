@@ -88,9 +88,8 @@ func (c *OntFsClient) GetGlobalParam() (*fs.FsGlobalParam, error) {
 }
 
 func (c *OntFsClient) GetNodeInfoList() (*fs.FsNodeInfoList, error) {
-	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(
-		contractAddr, contractVersion, fs.FS_GET_NODE_LIST, []interface{}{},
-	)
+	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
+		fs.FS_GET_NODE_LIST, []interface{}{})
 	if err != nil {
 		return nil, err
 	}
@@ -110,6 +109,89 @@ func (c *OntFsClient) GetNodeInfoList() (*fs.FsNodeInfoList, error) {
 	} else {
 		return nil, errors.New(string(retInfo.Info))
 	}
+}
+
+func (c *OntFsClient) CreateSpace(volume uint64, copyNumber uint64, timeExpired uint64) ([]byte, error) {
+	if c.DefAcc == nil {
+		return nil, errors.New("DefAcc is nil")
+	}
+
+	spaceInfo := fs.SpaceInfo{
+		SpaceOwner:     c.DefAcc.Address,
+		Volume:         volume,
+		CopyNumber:     copyNumber,
+		TimeExpired:    timeExpired,
+	}
+
+	sink := common.NewZeroCopySink(nil)
+	spaceInfo.Serialization(sink)
+
+	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion,
+		contractAddr, fs.FS_CREATE_SPACE, []interface{}{sink.Bytes()})
+	if err != nil {
+		return nil, err
+	}
+	return ret.ToArray(), err
+}
+
+func (c *OntFsClient) GetSpaceInfo() (*fs.SpaceInfo, error) {
+	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
+		fs.FS_GET_SPACE_INFO, []interface{}{c.WalletAddr})
+	if err != nil {
+		return nil, err
+	}
+	data, err := ret.Result.ToByteArray()
+	if err != nil {
+		return nil, fmt.Errorf("GetNodeInfoList result toByteArray: %s", err.Error())
+	}
+
+	var spaceInfo fs.SpaceInfo
+	retInfo := fs.DecRet(data)
+	if retInfo.Ret {
+		src := common.NewZeroCopySource(retInfo.Info)
+		if err = spaceInfo.Deserialization(src); err != nil {
+			return nil, fmt.Errorf("GetSpaceInfo Deserialization: %s", err.Error())
+		}
+		return &spaceInfo, nil
+	} else {
+		return nil, errors.New(string(retInfo.Info))
+	}
+}
+
+func (c *OntFsClient) UpdateSpace(volume uint64, timeExpired uint64) ([]byte, error) {
+	if c.DefAcc == nil {
+		return nil, errors.New("DefAcc is nil")
+	}
+
+	spaceUpdate := fs.SpaceUpdate{
+		SpaceOwner:     c.DefAcc.Address,
+		Payer:          c.DefAcc.Address,
+		NewVolume:      volume,
+		NewTimeExpired: timeExpired,
+	}
+
+	sink := common.NewZeroCopySink(nil)
+	spaceUpdate.Serialization(sink)
+
+	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion,
+		contractAddr, fs.FS_UPDATE_SPACE, []interface{}{sink.Bytes()})
+	if err != nil {
+		return nil, err
+	}
+	return ret.ToArray(), err
+}
+
+func (c *OntFsClient) DeleteSpace() ([]byte, error) {
+	if c.DefAcc == nil {
+		return nil, errors.New("DefAcc is nil")
+	}
+
+	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
+		fs.FS_DELETE_SPACE, []interface{}{c.DefAcc.Address})
+	if err != nil {
+		return nil, err
+	}
+	return ret.ToArray(), err
 }
 
 func (c *OntFsClient) StoreFile(fileHash string, fileBlockCount uint64, timeExpired uint64, copyNum uint64,

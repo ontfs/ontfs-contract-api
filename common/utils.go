@@ -88,7 +88,8 @@ func PrintStruct(st interface{}) {
 		if 0 == strings.Compare(fieldName, "NodeNetAddr") {
 			fmt.Printf("-[%-20s]:\t %s\n", fieldName, value)
 		} else if 0 == strings.Compare(fieldName, "NodeAddr") ||
-			0 == strings.Compare(fieldName, "FileOwner") {
+			0 == strings.Compare(fieldName, "FileOwner") ||
+			0 == strings.Compare(fieldName, "SpaceOwner")      {
 			hexAddr := fmt.Sprintf("%x", value)
 			addr, err := hex.DecodeString(hexAddr)
 			if err != nil {
