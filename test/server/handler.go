@@ -76,7 +76,7 @@ func PDP(fileHash string) {
 	for {
 		time.Sleep(ontfs.DefaultPdpInterval * time.Second)
 		fileInfo1, err := fsCore.GetFileInfo(fileHash)
-		if err != nil && fileInfo1 != nil{
+		if err != nil || fileInfo == nil{
 			log.Printf("File is not exist. Return")
 			return
 		}
