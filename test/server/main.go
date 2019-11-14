@@ -7,6 +7,7 @@ import (
 	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
+	"time"
 )
 
 const TestFileHash = "FileTest"
@@ -72,7 +73,8 @@ func GetGlobalParam() {
 }
 
 func RegisterNode() {
-	_, err := fsCore.NodeRegister(1024*1024*1024, 1000000000, "tcp://10.0.1.66:3389")
+	serviceDueTime := time.Now().Unix() + 100000
+	_, err := fsCore.NodeRegister(1024*1024*1024, uint64(serviceDueTime), "tcp://10.0.1.66:3389")
 	if err != nil {
 		log.Error("NodeRegister error: %s", err.Error())
 		return
@@ -90,7 +92,8 @@ func QueryNode() {
 }
 
 func UpdateNode() {
-	_, err := fsCore.NodeUpdate(1024*1024*1024, 1000000000, "tcp://10.0.1.66:1004")
+	serviceDueTime := time.Now().Unix() + 100000
+	_, err := fsCore.NodeUpdate(1024*1024*1024, uint64(serviceDueTime), "tcp://10.0.1.66:1004")
 	if err != nil {
 		log.Error("NodeUpdate error: %s", err.Error())
 		return

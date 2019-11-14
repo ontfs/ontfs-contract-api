@@ -239,7 +239,7 @@ func StoreFile() {
 func GetFileInfo(fileHash string) {
 	fileInfo, err := fsClient.GetFileInfo(fileHash)
 	if err != nil {
-		log.Error("GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
+		log.Errorf("GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
 		return
 	}
 	common.PrintStruct(*fileInfo)
@@ -307,7 +307,7 @@ func ChangeOwner(fileHash string, newOwner string) {
 
 	fileInfo, err := fsClient.GetFileInfo(fileHash)
 	if err != nil {
-		log.Error("ChangeOwner failed err is nil")
+		log.Errorf("ChangeOwner failed err: %s", err.Error())
 		return
 	}
 	if fileInfo.FileOwner == newOwnerAddr {
