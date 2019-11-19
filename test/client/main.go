@@ -12,7 +12,6 @@ import (
 	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontology-go-sdk/utils"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
-
 )
 
 const TestFileHash = "FileTest"

@@ -76,7 +76,7 @@ func RegisterNode() {
 	serviceDueTime := time.Now().Unix() + 100000
 	_, err := fsCore.NodeRegister(1024*1024*1024, uint64(serviceDueTime), "tcp://10.0.1.66:3389")
 	if err != nil {
-		log.Error("NodeRegister error: %s", err.Error())
+		log.Errorf("NodeRegister error: %s", err.Error())
 		return
 	}
 }
@@ -95,7 +95,7 @@ func UpdateNode() {
 	serviceDueTime := time.Now().Unix() + 100000
 	_, err := fsCore.NodeUpdate(1024*1024*1024, uint64(serviceDueTime), "tcp://10.0.1.66:1004")
 	if err != nil {
-		log.Error("NodeUpdate error: %s", err.Error())
+		log.Errorf("NodeUpdate error: %s", err.Error())
 		return
 	}
 }
@@ -103,7 +103,7 @@ func UpdateNode() {
 func CancelNode() {
 	_, err := fsCore.NodeCancel()
 	if err != nil {
-		log.Error("NodeCancel error: %s", err.Error())
+		log.Errorf("NodeCancel error: %s", err.Error())
 		return
 	}
 }
@@ -111,7 +111,7 @@ func CancelNode() {
 func WithDrawProfit() {
 	_, err := fsCore.NodeWithDrawProfit()
 	if err != nil {
-		log.Error("NodeWithDrawProfit error: %s", err.Error())
+		log.Errorf("NodeWithDrawProfit error: %s", err.Error())
 		return
 	}
 }
@@ -119,7 +119,7 @@ func WithDrawProfit() {
 func GetFileInfo(fileHash string) {
 	fileInfo, err := fsCore.GetFileInfo(fileHash)
 	if err != nil {
-		log.Error("GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
+		log.Errorf("GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
 		return
 	}
 	common.PrintStruct(*fileInfo)
