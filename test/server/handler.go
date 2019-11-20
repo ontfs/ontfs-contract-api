@@ -44,7 +44,6 @@ func handleConnection(conn net.Conn) {
 	log.Println(conn.RemoteAddr().String(), "Receive data:\n", msg)
 	conn.Write([]byte("Message Received"))
 
-
 	parts := strings.Split(msg, "|")
 	if 0 == strings.Compare(parts[0], "StoreFile") {
 		go PDP(parts[1])

@@ -37,7 +37,7 @@ func main() {
 	flag.StringVar(&action.fileHash, "fileHash", TestFileHash, "fileHash")
 	flag.Parse()
 
-	fsCore = core.Init("./wallet.dat", "pwd", "http://localhost:20336")
+	fsCore = core.Init("./wallet.dat", "pwd", "http://localhost:33894")
 	if fsCore == nil {
 		log.Error("fsNode Init error")
 		return
