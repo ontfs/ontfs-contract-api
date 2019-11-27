@@ -1,16 +1,16 @@
 package main
 
 import (
+	"encoding/hex"
+	"flag"
 	"os"
 	"sync"
 	"time"
-	"encoding/hex"
-	"flag"
 
-	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontfs-contract-api/client"
 	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontology-go-sdk/utils"
+	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
 )
 
@@ -100,8 +100,8 @@ func main() {
 }
 
 func CreateSpace() {
-	timeExpired := uint64(time.Now().Unix()) + 3600 * 24
-	txHash, err := fsClient.CreateSpace(1024 * 1024, 3, timeExpired)
+	timeExpired := uint64(time.Now().Unix()) + 3600*24
+	txHash, err := fsClient.CreateSpace(1024*1024, 3, timeExpired)
 	if err != nil {
 		log.Error("CreateSpace error: ", err.Error())
 		return
@@ -127,7 +127,7 @@ func DeleteSpace() {
 	}
 	fsClient.PollForTxConfirmed(15*time.Second, txHash)
 	spaceInfo, err := fsClient.GetSpaceInfo()
-	if err != nil && spaceInfo == nil{
+	if err != nil && spaceInfo == nil {
 		log.Info("DeleteSpace success")
 	} else {
 		log.Error("DeleteSpace failed")
@@ -142,8 +142,8 @@ func UpdateSpace() {
 	}
 	common.PrintStruct(*spaceInfo1)
 
-	timeExpired := uint64(time.Now().Unix()) + 3600 * 24
-	txHash, err := fsClient.UpdateSpace(1024 * 2048, timeExpired)
+	timeExpired := uint64(time.Now().Unix()) + 3600*24
+	txHash, err := fsClient.UpdateSpace(1024*2048, timeExpired)
 	if err != nil {
 		log.Error("UpdateSpace error: ", err.Error())
 		return
@@ -350,8 +350,8 @@ func ReadFile(fileHash string) {
 
 	readPlans := []ontfs.ReadPlan{
 		{
-			NodeAddr: pdpRecordList.PdpRecords[0].NodeAddr,
-			MaxReadBlockNum: fileInfo.FileBlockCount,
+			NodeAddr:         pdpRecordList.PdpRecords[0].NodeAddr,
+			MaxReadBlockNum:  fileInfo.FileBlockCount,
 			HaveReadBlockNum: 0,
 		},
 	}
@@ -368,7 +368,7 @@ func ReadFile(fileHash string) {
 		log.Error("GetFileReadPledge failed error: ", err.Error())
 		return
 	}
-	for _, readPlan := range readPledge.ReadPlans  {
+	for _, readPlan := range readPledge.ReadPlans {
 		if readPlan.NodeAddr == fsClient.WalletAddr {
 			haveReadBlockNum = readPlan.HaveReadBlockNum
 		}
@@ -389,7 +389,7 @@ func ReadFile(fileHash string) {
 	}
 
 	for i := uint64(0); i < fileInfo.FileBlockCount; i++ {
-		fileReadSlice, err := fsClient.GenFileReadSettleSlice([]byte(fileHash), readPlans[0].NodeAddr, i + haveReadBlockNum)
+		fileReadSlice, err := fsClient.GenFileReadSettleSlice([]byte(fileHash), readPlans[0].NodeAddr, i+haveReadBlockNum)
 		if err != nil {
 			log.Errorf("GenFileReadSettleSlice error: %s", err.Error())
 			return

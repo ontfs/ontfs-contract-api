@@ -1,14 +1,14 @@
 package main
 
 import (
+	"encoding/hex"
 	"github.com/ontio/ontfs-contract-api/common"
+	"github.com/ontio/ontology-go-sdk/utils"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
 	"log"
 	"net"
 	"strings"
 	"time"
-	"github.com/ontio/ontology-go-sdk/utils"
-	"encoding/hex"
 )
 
 func FsServer() {
@@ -75,7 +75,7 @@ func PDP(fileHash string) {
 	for {
 		time.Sleep(ontfs.DefaultPdpInterval * time.Second)
 		fileInfo1, err := fsCore.GetFileInfo(fileHash)
-		if err != nil || fileInfo == nil{
+		if err != nil || fileInfo == nil {
 			log.Printf("File is not exist. Return")
 			return
 		}
@@ -125,7 +125,7 @@ func FileRead(conn net.Conn, fileHash string, downloader string) {
 	for _, readPlan := range readPledge.ReadPlans {
 		if readPledge.ReadPlans[0].NodeAddr.ToBase58() == fsCore.WalletAddr.ToBase58() {
 			for i := uint64(0); i < readPlan.MaxReadBlockNum; i++ {
-				if i + readPlan.HaveReadBlockNum >= readPlan.MaxReadBlockNum {
+				if i+readPlan.HaveReadBlockNum >= readPlan.MaxReadBlockNum {
 					log.Println("FileReadPledge is not valid")
 					return
 				}
@@ -166,7 +166,7 @@ func FileRead(conn net.Conn, fileHash string, downloader string) {
 				log.Println("FileReadProfitSettle failed")
 				return
 			}
-			fsCore.PollForTxConfirmed(14* time.Second, settleTx)
+			fsCore.PollForTxConfirmed(14*time.Second, settleTx)
 			log.Println("FileReadProfitSettle over")
 		}
 	}

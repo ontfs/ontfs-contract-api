@@ -117,10 +117,10 @@ func (c *OntFsClient) CreateSpace(volume uint64, copyNumber uint64, timeExpired 
 	}
 
 	spaceInfo := fs.SpaceInfo{
-		SpaceOwner:     c.DefAcc.Address,
-		Volume:         volume,
-		CopyNumber:     copyNumber,
-		TimeExpired:    timeExpired,
+		SpaceOwner:  c.DefAcc.Address,
+		Volume:      volume,
+		CopyNumber:  copyNumber,
+		TimeExpired: timeExpired,
 	}
 
 	sink := common.NewZeroCopySink(nil)
@@ -258,7 +258,7 @@ func (c *OntFsClient) DeleteFiles(fileHashStrs []string) ([]byte, error) {
 
 	var fileDelList fs.FileDelList
 	for _, fileHashStr := range fileHashStrs {
-		fileDelList.FilesDel = append(fileDelList.FilesDel, fs.FileDel{FileHash:[]byte(fileHashStr)})
+		fileDelList.FilesDel = append(fileDelList.FilesDel, fs.FileDel{FileHash: []byte(fileHashStr)})
 	}
 
 	sink := common.NewZeroCopySink(nil)
