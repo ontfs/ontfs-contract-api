@@ -157,7 +157,7 @@ func UpdateSpace() {
 	}
 	common.PrintStruct(*spaceInfo2)
 
-	if spaceInfo1.Volume != spaceInfo2.Volume && spaceInfo1.TimeExpired != spaceInfo2.TimeExpired {
+	if spaceInfo1.Volume != spaceInfo2.Volume || spaceInfo1.TimeExpired != spaceInfo2.TimeExpired {
 		log.Info("UpdateSpace Success")
 	} else {
 		log.Error("UpdateSpace Failed")
