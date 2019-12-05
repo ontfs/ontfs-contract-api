@@ -87,6 +87,30 @@ func (c *OntFsClient) GetGlobalParam() (*fs.FsGlobalParam, error) {
 	}
 }
 
+func (c *OntFsClient) GetNodeInfo(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
+	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
+		fs.FS_NODE_QUERY, []interface{}{nodeWallet})
+	if err != nil {
+		return nil, err
+	}
+	data, err := ret.Result.ToByteArray()
+	if err != nil {
+		return nil, fmt.Errorf("GetNodeInfo result toByteArray: %s", err.Error())
+	}
+
+	var fsNodeInfo fs.FsNodeInfo
+	retInfo := fs.DecRet(data)
+	if retInfo.Ret {
+		src := common.NewZeroCopySource(retInfo.Info)
+		if err = fsNodeInfo.Deserialization(src); err != nil {
+			return nil, fmt.Errorf("GetNodeInfo error: %s", err.Error())
+		}
+		return &fsNodeInfo, nil
+	} else {
+		return nil, errors.New(string(retInfo.Info))
+	}
+}
+
 func (c *OntFsClient) GetNodeInfoList() (*fs.FsNodeInfoList, error) {
 	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
 		fs.FS_GET_NODE_LIST, []interface{}{})
