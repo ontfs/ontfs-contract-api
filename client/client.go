@@ -346,8 +346,23 @@ func (c *OntFsClient) ChangeFileOwner(fileHashStr string, newOwner common.Addres
 }
 
 func (c *OntFsClient) GetFileList() (*fs.FileHashList, error) {
+	height, err := c.OntSdk.GetCurrentBlockHeight()
+	if err != nil {
+		return nil, fmt.Errorf("GenPassport GetCurrentBlockHeight error: %s", err.Error())
+	}
+
+	blockHash, err := c.OntSdk.GetBlockHash(height)
+	if err != nil {
+		return nil, fmt.Errorf("GenPassport GetBlockHash error: %s", err.Error())
+	}
+
+	passport, err := c.GenPassport(height, blockHash.ToArray())
+	if err != nil {
+		return nil, fmt.Errorf("GetFileList genPassport error: %s", err.Error())
+	}
+
 	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
-		fs.FS_GET_FILE_LIST, []interface{}{c.WalletAddr})
+		fs.FS_GET_FILE_LIST, []interface{}{passport})
 	if err != nil {
 		return nil, err
 	}
@@ -497,6 +512,30 @@ func (c *OntFsClient) GetFileReadPledge(fileHashStr string, downloader common.Ad
 	} else {
 		return nil, errors.New(string(retInfo.Info))
 	}
+}
+
+func (c *OntFsClient) GenPassport(height uint32, blockHash []byte) ([]byte, error) {
+	passPort := fs.Passport{
+		BlockHeight: uint64(height),
+		BlockHash:   blockHash,
+		WalletAddr:  c.DefAcc.Address,
+		//WalletAddr:  common.Address{0x01, 0x02, 0x03},
+		PublicKey:   keypair.SerializePublicKey(c.DefAcc.PublicKey),
+	}
+
+	sinkTmp := common.NewZeroCopySink(nil)
+	passPort.Serialization(sinkTmp)
+
+	signData, err := apiComm.Sign(c.DefAcc, sinkTmp.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("GenPassport Sign error: %s", err.Error())
+	}
+	passPort.Signature = signData
+
+	sink := common.NewZeroCopySink(nil)
+	passPort.Serialization(sink)
+
+	return sink.Bytes(), nil
 }
 
 func (c *OntFsClient) GenFileReadSettleSlice(fileHash []byte, payTo common.Address, sliceId uint64) (*fs.FileReadSettleSlice, error) {
