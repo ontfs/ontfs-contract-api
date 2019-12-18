@@ -520,7 +520,7 @@ func (c *OntFsClient) GenPassport(height uint32, blockHash []byte) ([]byte, erro
 		BlockHash:   blockHash,
 		WalletAddr:  c.DefAcc.Address,
 		//WalletAddr:  common.Address{0x01, 0x02, 0x03},
-		PublicKey:   keypair.SerializePublicKey(c.DefAcc.PublicKey),
+		PublicKey: keypair.SerializePublicKey(c.DefAcc.PublicKey),
 	}
 
 	sinkTmp := common.NewZeroCopySink(nil)
@@ -538,12 +538,14 @@ func (c *OntFsClient) GenPassport(height uint32, blockHash []byte) ([]byte, erro
 	return sink.Bytes(), nil
 }
 
-func (c *OntFsClient) GenFileReadSettleSlice(fileHash []byte, payTo common.Address, sliceId uint64) (*fs.FileReadSettleSlice, error) {
+func (c *OntFsClient) GenFileReadSettleSlice(fileHash []byte, payTo common.Address, sliceId uint64,
+	pledgeHeight uint64) (*fs.FileReadSettleSlice, error) {
 	settleSlice := fs.FileReadSettleSlice{
-		FileHash: fileHash,
-		PayFrom:  c.DefAcc.Address,
-		PayTo:    payTo,
-		SliceId:  sliceId,
+		FileHash:     fileHash,
+		PayFrom:      c.DefAcc.Address,
+		PayTo:        payTo,
+		SliceId:      sliceId,
+		PledgeHeight: pledgeHeight,
 	}
 	sink := common.NewZeroCopySink(nil)
 	settleSlice.Serialization(sink)

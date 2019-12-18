@@ -3,8 +3,8 @@ package other
 import (
 	"testing"
 
-	fs "github.com/ontio/ontology/smartcontract/service/native/ontfs"
 	"github.com/ontio/ontfs-contract-api/client"
+	fs "github.com/ontio/ontology/smartcontract/service/native/ontfs"
 )
 
 func TestPassport_Check(t *testing.T) {
