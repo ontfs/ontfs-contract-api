@@ -277,10 +277,11 @@ func (d *OntFs) FileReadProfitSettle(fileReadSettleSlice *fs.FileReadSettleSlice
 
 func (d *OntFs) VerifyFileReadSettleSlice(settleSlice *fs.FileReadSettleSlice) (bool, error) {
 	tmpSettleSlice := fs.FileReadSettleSlice{
-		FileHash: settleSlice.FileHash,
-		PayFrom:  settleSlice.PayFrom,
-		PayTo:    settleSlice.PayTo,
-		SliceId:  settleSlice.SliceId,
+		FileHash:     settleSlice.FileHash,
+		PayFrom:      settleSlice.PayFrom,
+		PayTo:        settleSlice.PayTo,
+		SliceId:      settleSlice.SliceId,
+		PledgeHeight: settleSlice.PledgeHeight,
 	}
 	sink := common.NewZeroCopySink(nil)
 	tmpSettleSlice.Serialization(sink)
