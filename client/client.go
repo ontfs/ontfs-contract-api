@@ -111,9 +111,9 @@ func (c *OntFsClient) GetNodeInfo(nodeWallet common.Address) (*fs.FsNodeInfo, er
 	}
 }
 
-func (c *OntFsClient) GetNodeInfoList() (*fs.FsNodeInfoList, error) {
+func (c *OntFsClient) GetNodeInfoList(count uint64) (*fs.FsNodeInfoList, error) {
 	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
-		fs.FS_GET_NODE_LIST, []interface{}{})
+		fs.FS_GET_NODE_LIST, []interface{}{count})
 	if err != nil {
 		return nil, err
 	}
