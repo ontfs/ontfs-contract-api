@@ -31,13 +31,13 @@ type OntFs struct {
 	OntRpcSrvAddr string
 }
 
-func Init(walletPath string, walletPwd string, ontRpcSrvAddr string) *OntFs {
+func Init(walletPath string, walletPwd string, ontRpcSrvAddr string, gasPrice uint64, gasLimit uint64) *OntFs {
 	contractAddr = utils.OntFSContractAddress
 	ontFs := &OntFs{
 		WalletPath:    walletPath,
 		Password:      []byte(walletPwd),
-		GasPrice:      uint64(0),
-		GasLimit:      uint64(20000),
+		GasPrice:      gasPrice,
+		GasLimit:      gasLimit,
 		OntRpcSrvAddr: ontRpcSrvAddr,
 	}
 

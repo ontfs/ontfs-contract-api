@@ -62,7 +62,7 @@ func main() {
 	flag.StringVar(&action.newOwner, "newOwner", "", "   changeOwner - newOwner")
 	flag.Parse()
 
-	fsClient = client.Init("./wallet.dat", "pwd", "http://106.75.48.16:33894")
+	fsClient = client.Init("./wallet.dat", "pwd", "http://106.75.48.16:33894", 0, 20000)
 	if fsClient == nil {
 		log.Error("Init error")
 		return

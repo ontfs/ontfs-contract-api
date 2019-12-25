@@ -30,13 +30,13 @@ const contractVersion = byte(0)
 
 var contractAddr common.Address
 
-func Init(walletPath string, walletPwd string, ontRpcSrvAddr string) *OntFsClient {
+func Init(walletPath string, walletPwd string, ontRpcSrvAddr string, gasPrice uint64, gasLimit uint64) *OntFsClient {
 	contractAddr = ontUtils.OntFSContractAddress
 	ontFs := &OntFsClient{
 		WalletPath:    walletPath,
 		Password:      []byte(walletPwd),
-		GasPrice:      uint64(0),
-		GasLimit:      uint64(20000),
+		GasPrice:      gasPrice,
+		GasLimit:      gasLimit,
 		OntRpcSrvAddr: ontRpcSrvAddr,
 	}
 
