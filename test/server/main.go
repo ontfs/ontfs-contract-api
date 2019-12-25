@@ -2,17 +2,17 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
-	"time"
 )
 
 const TestFileHash = "FileTest"
 
-var fsCore *core.OntFs
+var fsCore *core.Core
 var globalParam *ontfs.FsGlobalParam
 
 var action = struct {

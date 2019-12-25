@@ -3,12 +3,12 @@ package other
 import (
 	"testing"
 
-	"github.com/ontio/ontfs-contract-api/client"
+	"github.com/ontio/ontfs-contract-api/core"
 	fs "github.com/ontio/ontology/smartcontract/service/native/ontfs"
 )
 
 func TestPassport_Check(t *testing.T) {
-	client := client.Init("./wallet.dat", "pwd", "")
+	client := core.Init("./wallet.dat", "pwd", "", 0, 20000)
 	if client == nil {
 		t.Fatalf("client init error")
 	}

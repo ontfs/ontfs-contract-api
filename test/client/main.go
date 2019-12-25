@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ontio/ontfs-contract-api/client"
+	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontology-go-sdk/utils"
 	"github.com/ontio/ontology/common/log"
@@ -16,7 +16,7 @@ import (
 
 const TestFileHash = "FileTest"
 
-var fsClient *client.OntFsClient
+var fsClient *core.Core
 var globalParam *ontfs.FsGlobalParam
 var once sync.Once
 
@@ -62,7 +62,7 @@ func main() {
 	flag.StringVar(&action.newOwner, "newOwner", "", "   changeOwner - newOwner")
 	flag.Parse()
 
-	fsClient = client.Init("./wallet.dat", "pwd", "http://106.75.48.16:33894", 0, 20000)
+	fsClient = core.Init("./wallet.dat", "pwd", "http://106.75.48.16:33894", 0, 20000)
 	if fsClient == nil {
 		log.Error("Init error")
 		return
@@ -175,7 +175,7 @@ func GetGlobalParam() {
 }
 
 func GetNodeInfoList() {
-	nodeInfoList, err := fsClient.GetNodeInfoList()
+	nodeInfoList, err := fsClient.GetNodeInfoList(9999999)
 	if err != nil {
 		log.Errorf("APP GetNodeInfoList error: %s", err.Error())
 		return
@@ -389,7 +389,7 @@ func ReadFile(fileHash string) {
 	}
 
 	for i := uint64(0); i < fileInfo.FileBlockCount; i++ {
-		fileReadSlice, err := fsClient.GenFileReadSettleSlice([]byte(fileHash), readPlans[0].NodeAddr, i+haveReadBlockNum)
+		fileReadSlice, err := fsClient.GenFileReadSettleSlice([]byte(fileHash), readPlans[0].NodeAddr, i+haveReadBlockNum, 1)
 		if err != nil {
 			log.Errorf("GenFileReadSettleSlice error: %s", err.Error())
 			return
