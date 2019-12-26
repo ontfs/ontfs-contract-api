@@ -9,6 +9,7 @@ import (
 	"net"
 	"strings"
 	"time"
+	"github.com/ontio/ontology-crypto/pdp"
 )
 
 func FsServer() {
@@ -67,7 +68,7 @@ func PDP(fileHash string) {
 	fileHashStr := string(fileInfo.FileHash)
 
 	log.Printf("FileProve first time")
-	_, err = fsCore.FileProve(fileHashStr, []byte("test"), "test", 8)
+	_, err = fsCore.FileProve(fileHashStr, pdp.Version, []byte("test"), "test", 8)
 	if err != nil {
 		log.Printf("First FileProve error: %s", err.Error())
 	}
@@ -96,7 +97,7 @@ func PDP(fileHash string) {
 		for _, pdpInfo := range pdpInfoList.PdpRecords {
 			if pdpInfo.NodeAddr == fsCore.WalletAddr {
 				common.PrintStruct(pdpInfo)
-				_, err = fsCore.FileProve(fileHashStr, []byte(fileHash), fileHash, pdpInfo.NextHeight)
+				_, err = fsCore.FileProve(fileHashStr, pdp.Version, []byte(fileHash), fileHash, pdpInfo.NextHeight)
 				if err != nil {
 					log.Printf("FileProve error: %s", err.Error())
 				}
