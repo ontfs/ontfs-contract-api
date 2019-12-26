@@ -38,8 +38,9 @@ func Verify(pubKey keypair.PublicKey, data, signature []byte) error {
 	return nil
 }
 
-func PdpParamSerialize(g []byte, g0 []byte, pubKey []byte, fileId []byte) []byte {
+func PdpParamSerialize(pdpVersion uint64, g []byte, g0 []byte, pubKey []byte, fileId []byte) []byte {
 	pdpParam := fs.PdpParam{
+		Version: pdpVersion,
 		G:      g,
 		G0:     g0,
 		PubKey: pubKey,

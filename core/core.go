@@ -191,7 +191,8 @@ func (c *Core) GetFileInfo(fileHashStr string) (*fs.FileInfo, error) {
 	}
 }
 
-func (c *Core) FileProve(fileHashStr string, multiRes []byte, addResStr string, blockHeight uint64) ([]byte, error) {
+func (c *Core) FileProve(fileHashStr string, pdpVersion uint64, multiRes []byte, addResStr string,
+	blockHeight uint64) ([]byte, error) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
 	}
@@ -199,6 +200,7 @@ func (c *Core) FileProve(fileHashStr string, multiRes []byte, addResStr string, 
 	addRes := []byte(addResStr)
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
 		fs.FS_FILE_PROVE, []interface{}{&fs.PdpData{
+			Version:         pdpVersion,
 			FileHash:        fileHash,
 			NodeAddr:        c.WalletAddr,
 			MultiRes:        multiRes,
