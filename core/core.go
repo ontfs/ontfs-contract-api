@@ -17,6 +17,7 @@ import (
 )
 
 const contractVersion = byte(0)
+const defaultMinPdpInterval = uint64(10 * 60)
 
 var contractAddr common.Address
 
@@ -364,6 +365,10 @@ func (c *Core) CreateSpace(volume uint64, copyNumber uint64, pdpInterval uint64,
 		return nil, errors.New("DefAcc is nil")
 	}
 
+	if pdpInterval < defaultMinPdpInterval {
+		return nil, errors.New("pdpInterval value is too small")
+	}
+
 	spaceInfo := fs.SpaceInfo{
 		SpaceOwner:  c.DefAcc.Address,
 		Volume:      volume,
@@ -447,6 +452,10 @@ func (c *Core) StoreFile(fileHash string, fileBlockCount uint64, pdpInterval uin
 	fileDesc []byte, pdpParam []byte, storageType uint64, realFileSize uint64) ([]byte, error) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
+	}
+
+	if pdpInterval < defaultMinPdpInterval {
+		return nil, errors.New("pdpInterval value is too small")
 	}
 
 	fileInfo := fs.FileInfo{
