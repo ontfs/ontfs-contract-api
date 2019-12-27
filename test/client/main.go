@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontfs-contract-api/common"
+	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontology-go-sdk/utils"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"

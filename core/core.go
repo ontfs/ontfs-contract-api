@@ -89,13 +89,13 @@ func (c *Core) GetGlobalParam() (*fs.FsGlobalParam, error) {
 	}
 }
 
-func (c *Core) NodeRegister(volume uint64, serviceTime uint64, nodeNetAddr string) ([]byte, error) {
+func (c *Core) NodeRegister(volume uint64, serviceTime uint64, minPdpInterval uint64, nodeNetAddr string) ([]byte, error) {
 	if c.DefAcc == nil {
 		return nil, errors.New("NodeRegister DefAcc is nil")
 	}
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
 		fs.FS_NODE_REGISTER, []interface{}{&fs.FsNodeInfo{Pledge: 0, Profit: 0, Volume: volume, RestVol: 0,
-			ServiceTime: serviceTime, NodeAddr: c.WalletAddr, NodeNetAddr: []byte(nodeNetAddr)}})
+			ServiceTime: serviceTime, MinPdpInterval: minPdpInterval, NodeAddr: c.WalletAddr, NodeNetAddr: []byte(nodeNetAddr)}})
 	if err != nil {
 		return nil, err
 	}
@@ -126,13 +126,14 @@ func (c *Core) NodeQuery(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
 	}
 }
 
-func (c *Core) NodeUpdate(volume uint64, serviceTime uint64, nodeNetAddr string) ([]byte, error) {
+func (c *Core) NodeUpdate(volume uint64, serviceTime uint64, minPdpInterval uint64, nodeNetAddr string) ([]byte, error) {
 	if c.DefAcc == nil {
 		return nil, errors.New("NodeUpdate DefAcc is nil")
 	}
 	ret, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
 		fs.FS_NODE_UPDATE, []interface{}{&fs.FsNodeInfo{Pledge: 0, Profit: 0, Volume: volume, RestVol: 0,
-			ServiceTime: serviceTime, NodeAddr: c.WalletAddr, NodeNetAddr: []byte(nodeNetAddr)}},
+			ServiceTime: serviceTime, MinPdpInterval: minPdpInterval, NodeAddr: c.WalletAddr,
+			NodeNetAddr: []byte(nodeNetAddr)}},
 	)
 	if err != nil {
 		return nil, err
@@ -613,7 +614,7 @@ func (c *Core) GenPassport(height uint32, blockHash []byte) ([]byte, error) {
 		BlockHeight: uint64(height),
 		BlockHash:   blockHash,
 		WalletAddr:  c.DefAcc.Address,
-		PublicKey: keypair.SerializePublicKey(c.DefAcc.PublicKey),
+		PublicKey:   keypair.SerializePublicKey(c.DefAcc.PublicKey),
 	}
 
 	sinkTmp := common.NewZeroCopySink(nil)
