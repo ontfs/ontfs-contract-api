@@ -358,7 +358,7 @@ func (c *Core) GetNodeInfoList(count uint64) (*fs.FsNodeInfoList, error) {
 	}
 }
 
-func (c *Core) CreateSpace(volume uint64, copyNumber uint64, timeExpired uint64) ([]byte, error) {
+func (c *Core) CreateSpace(volume uint64, copyNumber uint64, pdpInterval uint64, timeExpired uint64) ([]byte, error) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
 	}
@@ -367,6 +367,7 @@ func (c *Core) CreateSpace(volume uint64, copyNumber uint64, timeExpired uint64)
 		SpaceOwner:  c.DefAcc.Address,
 		Volume:      volume,
 		CopyNumber:  copyNumber,
+		PdpInterval: pdpInterval,
 		TimeExpired: timeExpired,
 	}
 
@@ -441,7 +442,7 @@ func (c *Core) DeleteSpace() ([]byte, error) {
 	return ret.ToArray(), err
 }
 
-func (c *Core) StoreFile(fileHash string, fileBlockCount uint64, timeExpired uint64, copyNum uint64,
+func (c *Core) StoreFile(fileHash string, fileBlockCount uint64, pdpInterval uint64, timeExpired uint64, copyNum uint64,
 	fileDesc []byte, pdpParam []byte, storageType uint64, realFileSize uint64) ([]byte, error) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
@@ -454,6 +455,7 @@ func (c *Core) StoreFile(fileHash string, fileBlockCount uint64, timeExpired uin
 		FileBlockCount: fileBlockCount,
 		RealFileSize:   realFileSize,
 		CopyNumber:     copyNum,
+		PdpInterval:    pdpInterval,
 		TimeExpired:    timeExpired,
 		PdpParam:       pdpParam,
 		StorageType:    storageType,

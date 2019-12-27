@@ -15,6 +15,7 @@ import (
 )
 
 const TestFileHash = "FileTest"
+const DefaultPdpInterval = 4 * 60 * 60
 
 var fsClient *core.Core
 var globalParam *ontfs.FsGlobalParam
@@ -101,7 +102,7 @@ func main() {
 
 func CreateSpace() {
 	timeExpired := uint64(time.Now().Unix()) + 3600*24
-	txHash, err := fsClient.CreateSpace(1024*1024, 3, timeExpired)
+	txHash, err := fsClient.CreateSpace(1024*1024, 3, DefaultPdpInterval, timeExpired)
 	if err != nil {
 		log.Error("CreateSpace error: ", err.Error())
 		return
@@ -201,7 +202,7 @@ func GetFileList() {
 
 func StoreFile() {
 	timeExpired := uint64(time.Now().Unix()) + 3600
-	txHash, err := fsClient.StoreFile(TestFileHash, 256, timeExpired, 1, []byte(TestFileHash),
+	txHash, err := fsClient.StoreFile(TestFileHash, 256, DefaultPdpInterval, timeExpired, 1, []byte(TestFileHash),
 		[]byte(TestFileHash), ontfs.FileStorageTypeUseFile, 256*256+256)
 	if err != nil {
 		log.Error("StoreFile error: ", err.Error())
@@ -243,7 +244,7 @@ func GetFileInfo(fileHash string) {
 	}
 	common.PrintStruct(*fileInfo)
 
-	filePdpNeedCount := (fileInfo.TimeExpired-fileInfo.TimeStart)/ontfs.DefaultPdpInterval + 1
+	filePdpNeedCount := (fileInfo.TimeExpired-fileInfo.TimeStart)/fileInfo.PdpInterval + 1
 	log.Infof("TotalPdpNeedCount: %d", filePdpNeedCount)
 }
 

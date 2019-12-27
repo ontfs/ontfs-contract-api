@@ -61,7 +61,7 @@ func PDP(fileHash string) {
 		log.Printf("GetFileInfo error: %s", err.Error())
 		return
 	}
-	filePdpNeedCount := (fileInfo.TimeExpired-fileInfo.TimeStart)/ontfs.DefaultPdpInterval + 1
+	filePdpNeedCount := (fileInfo.TimeExpired-fileInfo.TimeStart)/fileInfo.PdpInterval + 1
 	log.Printf("TotalPdpNeedCount: %d", filePdpNeedCount)
 	common.PrintStruct(*fileInfo)
 
@@ -74,13 +74,13 @@ func PDP(fileHash string) {
 	}
 
 	for {
-		time.Sleep(ontfs.DefaultPdpInterval * time.Second)
+		time.Sleep(time.Duration(fileInfo.PdpInterval * uint64(time.Second)))
 		fileInfo1, err := fsCore.GetFileInfo(fileHash)
 		if err != nil || fileInfo == nil {
 			log.Printf("File is not exist. Return")
 			return
 		}
-		filePdpNeedCount := (fileInfo1.TimeExpired-fileInfo1.TimeStart)/ontfs.DefaultPdpInterval + 1
+		filePdpNeedCount := (fileInfo1.TimeExpired-fileInfo1.TimeStart)/fileInfo.PdpInterval + 1
 		log.Printf("TotalPdpNeedCount: %d", filePdpNeedCount)
 
 		log.Printf("FileProve begin")
