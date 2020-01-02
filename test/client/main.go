@@ -6,12 +6,14 @@ import (
 	"os"
 	"sync"
 	"time"
+	"fmt"
 
 	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontology-go-sdk/utils"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
+
 )
 
 const TestFileHash = "FileTest"
@@ -41,6 +43,7 @@ var action = struct {
 }{}
 
 func main() {
+	log.InitLog(log.InfoLog, ".")
 	flag.BoolVar(&action.getGlobalParam, "getGlobalParam", false, "getGlobalParam")
 	flag.BoolVar(&action.getNodeInfoList, "getNodeInfoList", false, "getNodeInfoList")
 	flag.BoolVar(&action.getPdpInfoList, "getPdpInfoList", false, "getPdpInfoList")
@@ -63,7 +66,7 @@ func main() {
 	flag.StringVar(&action.newOwner, "newOwner", "", "   changeOwner - newOwner")
 	flag.Parse()
 
-	fsClient = core.Init("./wallet.dat", "pwd", "http://106.75.48.16:33894", 0, 20000)
+	fsClient = core.Init("./wallet.dat", "pwd", "http://127.0.0.1:20336", 0, 20000)
 	if fsClient == nil {
 		log.Error("Init error")
 		return
@@ -86,7 +89,7 @@ func main() {
 	} else if action.readFile {
 		ReadFile(action.fileHash)
 	} else if action.changeOwner {
-		ChangeOwner(action.fileHash, action.newOwner)
+		TransferFile(action.fileHash, action.newOwner)
 	} else if action.getPdpInfoList {
 		GetPdpInfoList(action.fileHash)
 	} else if action.createSpace {
@@ -202,22 +205,33 @@ func GetFileList() {
 
 func StoreFile() {
 	timeExpired := uint64(time.Now().Unix()) + 3600
-	txHash, err := fsClient.StoreFile(TestFileHash, 256, DefaultPdpInterval, timeExpired, 1, []byte(TestFileHash),
-		[]byte(TestFileHash), ontfs.FileStorageTypeUseFile, 256*256+256)
+	filesInfo := []common.FileInfo{
+		{
+			FileHash:      TestFileHash,
+			FileOwner:      fsClient.WalletAddr,
+			FileDesc:       TestFileHash,
+			FileBlockCount: 256,
+			RealFileSize:   256*256 + 256,
+			CopyNumber:     3,
+			PdpInterval:    DefaultPdpInterval,
+			TimeExpired:    timeExpired,
+			PdpParam:       []byte(TestFileHash),
+			StorageType:    ontfs.FileStorageTypeUseFile,
+		},
+	}
+
+	_, err, storeErrors := fsClient.StoreFiles(filesInfo)
 	if err != nil {
 		log.Error("StoreFile error: ", err.Error())
 		return
 	}
 
-	fsClient.PollForTxConfirmed(15*time.Second, txHash)
-
-	fileInfo, err := fsClient.GetFileInfo(TestFileHash)
-	if err != nil {
-		log.Errorf("StoreFile GetFileInfo fileHash: %s error: %s", TestFileHash, err.Error())
+	if len(storeErrors.ObjectErrors) == 0 {
+		fmt.Printf("StoreFile no object error\n")
 		return
-	} else if fileInfo == nil {
-		log.Error("StoreFile GetFileInfo failed, fileInfo is nil")
-		return
+	}
+	for k, v := range storeErrors.ObjectErrors  {
+		fmt.Printf("%s | %s\n", k, v)
 	}
 
 	once.Do(func() {
@@ -254,66 +268,70 @@ func RenewFile(fileHash string) {
 		log.Errorf("RenewFile GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
 		return
 	}
-	renewTx, err := fsClient.RenewFile(fileHash, fileInfo.TimeExpired+1024)
+
+	fileRenew := []common.FileRenew{
+		{
+			FileHash:      fileHash,
+			RenewTime:     fileInfo.TimeExpired+1024,
+		},
+	}
+	_, err, renewErrors := fsClient.RenewFiles(fileRenew)
 	if err != nil {
 		log.Error("RenewFile error: ", err.Error())
 		return
 	}
-	fsClient.PollForTxConfirmed(14*time.Second, renewTx)
 
-	fileInfo1, err := fsClient.GetFileInfo(fileHash)
-	if err != nil {
-		log.Errorf("RenewFile GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
+	if len(renewErrors.ObjectErrors) == 0 {
+		fmt.Printf("RenewFiles no object error\n")
 		return
 	}
-	if fileInfo1.TimeExpired == fileInfo.TimeExpired+1024 {
-		log.Info("RenewFile success")
-	} else {
-		log.Info("RenewFile failed")
+	for k, v := range renewErrors.ObjectErrors  {
+		fmt.Printf("%s | %s\n", k, v)
 	}
 }
 
 func DeleteFile(fileHash string) {
-	delFileTx, err := fsClient.DeleteFiles([]string{fileHash})
+	_, err, delErrors := fsClient.DeleteFiles([]string{fileHash})
 	if err != nil {
 		log.Error("DeleteFile error: ", err.Error())
 		return
 	}
-	fsClient.PollForTxConfirmed(14*time.Second, delFileTx)
 
-	fileInfo, err := fsClient.GetFileInfo(fileHash)
-	if err == nil {
-		log.Error("DeleteFile failed err is nil")
-	} else if fileInfo != nil {
-		log.Error("DeleteFile failed")
-	} else {
-		log.Info("DeleteFile success")
+	if len(delErrors.ObjectErrors) == 0 {
+		fmt.Printf("DeleteFile no object error\n")
+		return
 	}
+	for k, v := range delErrors.ObjectErrors  {
+		fmt.Printf("%s | %s\n", k, v)
+	}
+
 }
 
-func ChangeOwner(fileHash string, newOwner string) {
+func TransferFile(fileHash string, newOwner string) {
 	newOwnerAddr, err := utils.AddressFromBase58(newOwner)
 	if err != nil {
 		log.Error("ChangeOwner AddressFromBase58 error: ", err.Error())
 		return
 	}
 
-	ownerChangeTx, err := fsClient.ChangeFileOwner(fileHash, newOwnerAddr)
+	fileTransfer := []common.FileTransfer{
+		{
+			FileHash:      fileHash,
+			NewOwner:      newOwnerAddr,
+		},
+	}
+
+	_, err, transferErrors := fsClient.TransferFiles(fileTransfer)
 	if err != nil {
 		log.Error("ChangeOwner error: ", err.Error())
 		return
 	}
-	fsClient.PollForTxConfirmed(14*time.Second, ownerChangeTx)
-
-	fileInfo, err := fsClient.GetFileInfo(fileHash)
-	if err != nil {
-		log.Errorf("ChangeOwner failed err: %s", err.Error())
+	if len(transferErrors.ObjectErrors) == 0 {
+		fmt.Printf("TransferFile no object error\n")
 		return
 	}
-	if fileInfo.FileOwner == newOwnerAddr {
-		log.Infof("ChangeOwner success")
-	} else {
-		log.Infof("ChangeOwner failed")
+	for k, v := range transferErrors.ObjectErrors  {
+		fmt.Printf("%s | %s\n", k, v)
 	}
 }
 
