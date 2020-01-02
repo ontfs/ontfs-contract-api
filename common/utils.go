@@ -38,29 +38,6 @@ func Verify(pubKey keypair.PublicKey, data, signature []byte) error {
 	return nil
 }
 
-func PdpParamSerialize(pdpVersion uint64, g []byte, g0 []byte, pubKey []byte, fileId []byte) []byte {
-	pdpParam := fs.PdpParam{
-		Version: pdpVersion,
-		G:       g,
-		G0:      g0,
-		PubKey:  pubKey,
-		FileId:  fileId,
-	}
-
-	sink := common.NewZeroCopySink(nil)
-	pdpParam.Serialization(sink)
-	return sink.Bytes()
-}
-
-func PdpParamDeserialize(pdpParamData []byte) (*fs.PdpParam, error) {
-	var pdpParam fs.PdpParam
-	src := common.NewZeroCopySource(pdpParamData)
-	if err := pdpParam.Deserialization(src); err != nil {
-		return nil, fmt.Errorf("PdpParamDeserialize error: %s", err.Error())
-	}
-	return &pdpParam, nil
-}
-
 func FileReadSettleSliceSerialize(fileReadSettleSlice *fs.FileReadSettleSlice) []byte {
 	sink := common.NewZeroCopySink(nil)
 	fileReadSettleSlice.Serialization(sink)

@@ -8,7 +8,6 @@ import (
 
 	apiComm "github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontology-crypto/keypair"
-	"github.com/ontio/ontology-crypto/pdp"
 	"github.com/ontio/ontology-crypto/signature"
 	ont "github.com/ontio/ontology-go-sdk"
 	"github.com/ontio/ontology/common"
@@ -206,20 +205,16 @@ func (c *Core) NodeWithDrawProfit() ([]byte, error) {
 	return txHash.ToArray(), nil
 }
 
-func (c *Core) FileProve(fileHashStr string, pdpVersion uint64, multiRes []byte, addResStr string,
-	blockHeight uint64) ([]byte, error) {
+func (c *Core) FileProve(fileHashStr string, proveData []byte, blockHeight uint64) ([]byte, error) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil")
 	}
 	fileHash := []byte(fileHashStr)
-	addRes := []byte(addResStr)
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
 		fs.FS_FILE_PROVE, []interface{}{&fs.PdpData{
-			Version:         pdpVersion,
 			FileHash:        fileHash,
 			NodeAddr:        c.WalletAddr,
-			MultiRes:        multiRes,
-			AddRes:          addRes,
+			ProveData:       proveData,
 			ChallengeHeight: blockHeight,
 		}},
 	)
@@ -329,10 +324,6 @@ func (c *Core) GetFilePdpRecordList(fileHashStr string) (*fs.PdpRecordList, erro
 	} else {
 		return nil, errors.New(string(retInfo.Info))
 	}
-}
-
-func (c *Core) GenChallenge(nodeAddr common.Address, hash []byte, fileBlockNum, proveNum uint64) []pdp.Challenge {
-	return fs.GenChallenge(nodeAddr, hash, uint32(fileBlockNum), uint32(proveNum))
 }
 
 func (c *Core) GetNodeInfo(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
