@@ -2,9 +2,8 @@ package common
 
 import "github.com/ontio/ontology/common"
 
-type FileInfo struct {
+type FileStore struct {
 	FileHash       string
-	FileOwner      common.Address
 	FileDesc       string
 	FileBlockCount uint64
 	RealFileSize   uint64

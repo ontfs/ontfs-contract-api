@@ -205,10 +205,9 @@ func GetFileList() {
 
 func StoreFile() {
 	timeExpired := uint64(time.Now().Unix()) + 3600
-	filesInfo := []common.FileInfo{
+	fileStores := []common.FileStore{
 		{
 			FileHash:      TestFileHash,
-			FileOwner:      fsClient.WalletAddr,
 			FileDesc:       TestFileHash,
 			FileBlockCount: 256,
 			RealFileSize:   256*256 + 256,
@@ -220,7 +219,7 @@ func StoreFile() {
 		},
 	}
 
-	_, err, storeErrors := fsClient.StoreFiles(filesInfo)
+	_, err, storeErrors := fsClient.StoreFiles(fileStores)
 	if err != nil {
 		log.Error("StoreFile error: ", err.Error())
 		return

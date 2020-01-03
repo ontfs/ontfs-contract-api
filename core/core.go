@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	apiComm "github.com/ontio/ontfs-contract-api/common"
+	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology-crypto/signature"
 	ont "github.com/ontio/ontology-go-sdk"
-	"github.com/ontio/ontology/common"
+	ccom "github.com/ontio/ontology/common"
 	fs "github.com/ontio/ontology/smartcontract/service/native/ontfs"
 	"github.com/ontio/ontology/smartcontract/service/native/utils"
 )
@@ -18,12 +18,12 @@ import (
 const contractVersion = byte(0)
 const defaultMinPdpInterval = uint64(10 * 60)
 
-var contractAddr common.Address
+var contractAddr ccom.Address
 
 type Core struct {
 	WalletPath    string
 	Password      []byte
-	WalletAddr    common.Address
+	WalletAddr    ccom.Address
 	GasPrice      uint64
 	GasLimit      uint64
 	OntSdk        *ont.OntologySdk
@@ -79,7 +79,7 @@ func (c *Core) GetGlobalParam() (*fs.FsGlobalParam, error) {
 	var globalParam fs.FsGlobalParam
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = globalParam.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetGlobalParam error: %s", err.Error())
 		}
@@ -110,14 +110,14 @@ func (c *Core) NodeRegister(volume uint64, serviceTime uint64, minPdpInterval ui
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("NodeRegister tx is not confirmed")
 	}
 	return txHash.ToArray(), nil
 }
 
-func (c *Core) NodeQuery(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
+func (c *Core) NodeQuery(nodeWallet ccom.Address) (*fs.FsNodeInfo, error) {
 	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
 		fs.FS_NODE_QUERY, []interface{}{nodeWallet})
 	if err != nil {
@@ -131,7 +131,7 @@ func (c *Core) NodeQuery(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
 	var fsNodeInfo fs.FsNodeInfo
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = fsNodeInfo.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("NodeQuery error: %s", err.Error())
 		}
@@ -163,7 +163,7 @@ func (c *Core) NodeUpdate(volume uint64, serviceTime uint64, minPdpInterval uint
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("NodeUpdate tx is not confirmed")
 	}
@@ -180,7 +180,7 @@ func (c *Core) NodeCancel() ([]byte, error) {
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("NodeCancel tx is not confirmed")
 	}
@@ -198,7 +198,7 @@ func (c *Core) NodeWithDrawProfit() ([]byte, error) {
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("NodeWithDrawProfit tx is not confirmed")
 	}
@@ -222,14 +222,14 @@ func (c *Core) FileProve(fileHashStr string, proveData []byte, blockHeight uint6
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("FileProve tx is not confirmed")
 	}
 	return txHash.ToArray(), nil
 }
 
-func (c *Core) GetFileReadPledge(fileHashStr string, downloader common.Address) (*fs.ReadPledge, error) {
+func (c *Core) GetFileReadPledge(fileHashStr string, downloader ccom.Address) (*fs.ReadPledge, error) {
 	fileHash := []byte(fileHashStr)
 	getReadPledge := &fs.GetReadPledge{
 		FileHash:   fileHash,
@@ -249,7 +249,7 @@ func (c *Core) GetFileReadPledge(fileHashStr string, downloader common.Address) 
 	var readPledge fs.ReadPledge
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = readPledge.Deserialization(src); err != nil {
 			return nil, err
 		}
@@ -270,7 +270,7 @@ func (c *Core) FileReadProfitSettle(fileReadSettleSlice *fs.FileReadSettleSlice)
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("FileReadProfitSettle tx is not confirmed")
 	}
@@ -285,7 +285,7 @@ func (c *Core) VerifyFileReadSettleSlice(settleSlice *fs.FileReadSettleSlice) (b
 		SliceId:      settleSlice.SliceId,
 		PledgeHeight: settleSlice.PledgeHeight,
 	}
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	tmpSettleSlice.Serialization(sink)
 
 	signValue, err := signature.Deserialize(settleSlice.Sig)
@@ -316,7 +316,7 @@ func (c *Core) GetFilePdpRecordList(fileHashStr string) (*fs.PdpRecordList, erro
 	var pdpRecordList fs.PdpRecordList
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = pdpRecordList.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetFilePdpRecordList deserialize error: %s", err.Error())
 		}
@@ -326,7 +326,7 @@ func (c *Core) GetFilePdpRecordList(fileHashStr string) (*fs.PdpRecordList, erro
 	}
 }
 
-func (c *Core) GetNodeInfo(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
+func (c *Core) GetNodeInfo(nodeWallet ccom.Address) (*fs.FsNodeInfo, error) {
 	ret, err := c.OntSdk.Native.PreExecInvokeNativeContract(contractAddr, contractVersion,
 		fs.FS_NODE_QUERY, []interface{}{nodeWallet})
 	if err != nil {
@@ -340,7 +340,7 @@ func (c *Core) GetNodeInfo(nodeWallet common.Address) (*fs.FsNodeInfo, error) {
 	var fsNodeInfo fs.FsNodeInfo
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = fsNodeInfo.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetNodeInfo error: %s", err.Error())
 		}
@@ -364,7 +364,7 @@ func (c *Core) GetNodeInfoList(count uint64) (*fs.FsNodeInfoList, error) {
 	var nodeInfoList fs.FsNodeInfoList
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = nodeInfoList.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetNodeInfoList Deserialization: %s", err.Error())
 		}
@@ -391,7 +391,7 @@ func (c *Core) CreateSpace(volume uint64, copyNumber uint64, pdpInterval uint64,
 		TimeExpired: timeExpired,
 	}
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	spaceInfo.Serialization(sink)
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion,
@@ -400,7 +400,7 @@ func (c *Core) CreateSpace(volume uint64, copyNumber uint64, pdpInterval uint64,
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("CreateSpace tx is not confirmed")
 	}
@@ -421,7 +421,7 @@ func (c *Core) GetSpaceInfo() (*fs.SpaceInfo, error) {
 	var spaceInfo fs.SpaceInfo
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = spaceInfo.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetSpaceInfo Deserialization: %s", err.Error())
 		}
@@ -443,7 +443,7 @@ func (c *Core) UpdateSpace(volume uint64, timeExpired uint64) ([]byte, error) {
 		NewTimeExpired: timeExpired,
 	}
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	spaceUpdate.Serialization(sink)
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion,
@@ -452,7 +452,7 @@ func (c *Core) UpdateSpace(volume uint64, timeExpired uint64) ([]byte, error) {
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("UpdateSpace tx is not confirmed")
 	}
@@ -470,7 +470,7 @@ func (c *Core) DeleteSpace() ([]byte, error) {
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("DeleteSpace tx is not confirmed")
 	}
@@ -506,7 +506,7 @@ func (c *Core) GetFileList() (*fs.FileHashList, error) {
 	var fileList fs.FileHashList
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = fileList.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetFileList error: %s", err.Error())
 		}
@@ -532,7 +532,7 @@ func (c *Core) GetFileInfo(fileHashStr string) (*fs.FileInfo, error) {
 	var fileInfo fs.FileInfo
 	retInfo := fs.DecRet(data)
 	if retInfo.Ret {
-		src := common.NewZeroCopySource(retInfo.Info)
+		src := ccom.NewZeroCopySource(retInfo.Info)
 		if err = fileInfo.Deserialization(src); err != nil {
 			return nil, fmt.Errorf("GetFileInfo error: %s", err.Error())
 		}
@@ -542,7 +542,7 @@ func (c *Core) GetFileInfo(fileHashStr string) (*fs.FileInfo, error) {
 	}
 }
 
-func (c *Core) StoreFiles(filesInfo []apiComm.FileInfo) ([]byte, error, *fs.Errors) {
+func (c *Core) StoreFiles(filesInfo []common.FileStore) ([]byte, error, *fs.Errors) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil"), nil
 	}
@@ -567,7 +567,7 @@ func (c *Core) StoreFiles(filesInfo []apiComm.FileInfo) ([]byte, error, *fs.Erro
 		fileInfoList.FilesI = append(fileInfoList.FilesI, fsFileInfo)
 	}
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	fileInfoList.Serialization(sink)
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion,
@@ -576,7 +576,7 @@ func (c *Core) StoreFiles(filesInfo []apiComm.FileInfo) ([]byte, error, *fs.Erro
 		return nil, err, nil
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("StoreFiles tx is not confirmed"), nil
 	}
@@ -586,18 +586,18 @@ func (c *Core) StoreFiles(filesInfo []apiComm.FileInfo) ([]byte, error, *fs.Erro
 		return txHash.ToArray(), err, nil
 	}
 
-	var errors fs.Errors
+	var objErrors fs.Errors
 	errorDataIndex := len(event.Notify) - 1
 	errorData, ok := event.Notify[errorDataIndex].States.(string)
 	if !ok {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}
-	err = errors.FromString(errorData)
-	return txHash.ToArray(), err, &errors
+	err = objErrors.FromString(errorData)
+	return txHash.ToArray(), err, &objErrors
 }
 
-func (c *Core) TransferFiles(fileTransfers []apiComm.FileTransfer) ([]byte, error, *fs.Errors) {
+func (c *Core) TransferFiles(fileTransfers []common.FileTransfer) ([]byte, error, *fs.Errors) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil"), nil
 	}
@@ -612,7 +612,7 @@ func (c *Core) TransferFiles(fileTransfers []apiComm.FileTransfer) ([]byte, erro
 		fileTransferList.FilesTransfer = append(fileTransferList.FilesTransfer, fsFileTransfer)
 	}
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	fileTransferList.Serialization(sink)
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
@@ -621,7 +621,7 @@ func (c *Core) TransferFiles(fileTransfers []apiComm.FileTransfer) ([]byte, erro
 		return nil, err, nil
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("TransferFiles tx is not confirmed"), nil
 	}
@@ -631,18 +631,18 @@ func (c *Core) TransferFiles(fileTransfers []apiComm.FileTransfer) ([]byte, erro
 		return txHash.ToArray(), err, nil
 	}
 
-	var errors fs.Errors
+	var objErrors fs.Errors
 	errorDataIndex := len(event.Notify) - 1
 	errorData, ok := event.Notify[errorDataIndex].States.(string)
 	if !ok {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}
-	err = errors.FromString(errorData)
-	return txHash.ToArray(), err, &errors
+	err = objErrors.FromString(errorData)
+	return txHash.ToArray(), err, &objErrors
 }
 
-func (c *Core) RenewFiles(filesRenew []apiComm.FileRenew) ([]byte, error, *fs.Errors) {
+func (c *Core) RenewFiles(filesRenew []common.FileRenew) ([]byte, error, *fs.Errors) {
 	if c.DefAcc == nil {
 		return nil, errors.New("DefAcc is nil"), nil
 	}
@@ -658,7 +658,7 @@ func (c *Core) RenewFiles(filesRenew []apiComm.FileRenew) ([]byte, error, *fs.Er
 		fileReNewList.FilesReNew = append(fileReNewList.FilesReNew, fsFileRenew)
 	}
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	fileReNewList.Serialization(sink)
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc,
@@ -667,7 +667,7 @@ func (c *Core) RenewFiles(filesRenew []apiComm.FileRenew) ([]byte, error, *fs.Er
 	if err != nil {
 		return nil, err, nil
 	}
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("RenewFiles tx is not confirmed"), nil
 	}
@@ -677,15 +677,15 @@ func (c *Core) RenewFiles(filesRenew []apiComm.FileRenew) ([]byte, error, *fs.Er
 		return txHash.ToArray(), err, nil
 	}
 
-	var errors fs.Errors
+	var objErrors fs.Errors
 	errorDataIndex := len(event.Notify) - 1
 	errorData, ok := event.Notify[errorDataIndex].States.(string)
 	if !ok {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}
-	err = errors.FromString(errorData)
-	return txHash.ToArray(), err, &errors
+	err = objErrors.FromString(errorData)
+	return txHash.ToArray(), err, &objErrors
 }
 
 func (c *Core) DeleteFiles(fileHashes []string) ([]byte, error, *fs.Errors) {
@@ -698,7 +698,7 @@ func (c *Core) DeleteFiles(fileHashes []string) ([]byte, error, *fs.Errors) {
 		fileDelList.FilesDel = append(fileDelList.FilesDel, fs.FileDel{FileHash: []byte(fileHashStr)})
 	}
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	fileDelList.Serialization(sink)
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
@@ -707,7 +707,7 @@ func (c *Core) DeleteFiles(fileHashes []string) ([]byte, error, *fs.Errors) {
 		return nil, err, nil
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("DeleteFiles tx is not confirmed"), nil
 	}
@@ -717,15 +717,15 @@ func (c *Core) DeleteFiles(fileHashes []string) ([]byte, error, *fs.Errors) {
 		return txHash.ToArray(), err, nil
 	}
 
-	var errors fs.Errors
+	var objErrors fs.Errors
 	errorDataIndex := len(event.Notify) - 1
 	errorData, ok := event.Notify[errorDataIndex].States.(string)
 	if !ok {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}
-	err = errors.FromString(errorData)
-	return txHash.ToArray(), err, &errors
+	err = objErrors.FromString(errorData)
+	return txHash.ToArray(), err, &objErrors
 }
 
 func (c *Core) FileReadPledge(fileHashStr string, readPlans []fs.ReadPlan) ([]byte, error) {
@@ -742,7 +742,7 @@ func (c *Core) FileReadPledge(fileHashStr string, readPlans []fs.ReadPlan) ([]by
 		ReadPlans:    readPlans,
 	}
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	fileReadPledge.Serialization(sink)
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
@@ -751,7 +751,7 @@ func (c *Core) FileReadPledge(fileHashStr string, readPlans []fs.ReadPlan) ([]by
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("FileReadPledge tx is not confirmed")
 	}
@@ -773,7 +773,7 @@ func (c *Core) CancelFileRead(fileHashStr string) ([]byte, error) {
 		return nil, err
 	}
 
-	confirmed, err := c.PollForTxConfirmed(time.Duration(apiComm.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
+	confirmed, err := c.PollForTxConfirmed(time.Duration(common.TX_CONFIRM_TIMEOUT)*time.Second, txHash.ToArray())
 	if err != nil || !confirmed {
 		return txHash.ToArray(), errors.New("CancelFileRead tx is not confirmed")
 	}
@@ -788,22 +788,22 @@ func (c *Core) GenPassport(height uint32, blockHash []byte) ([]byte, error) {
 		PublicKey:   keypair.SerializePublicKey(c.DefAcc.PublicKey),
 	}
 
-	sinkTmp := common.NewZeroCopySink(nil)
+	sinkTmp := ccom.NewZeroCopySink(nil)
 	passPort.Serialization(sinkTmp)
 
-	signData, err := apiComm.Sign(c.DefAcc, sinkTmp.Bytes())
+	signData, err := common.Sign(c.DefAcc, sinkTmp.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("GenPassport Sign error: %s", err.Error())
 	}
 	passPort.Signature = signData
 
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	passPort.Serialization(sink)
 
 	return sink.Bytes(), nil
 }
 
-func (c *Core) GenFileReadSettleSlice(fileHash []byte, payTo common.Address, sliceId uint64,
+func (c *Core) GenFileReadSettleSlice(fileHash []byte, payTo ccom.Address, sliceId uint64,
 	pledgeHeight uint64) (*fs.FileReadSettleSlice, error) {
 	settleSlice := fs.FileReadSettleSlice{
 		FileHash:     fileHash,
@@ -812,10 +812,10 @@ func (c *Core) GenFileReadSettleSlice(fileHash []byte, payTo common.Address, sli
 		SliceId:      sliceId,
 		PledgeHeight: pledgeHeight,
 	}
-	sink := common.NewZeroCopySink(nil)
+	sink := ccom.NewZeroCopySink(nil)
 	settleSlice.Serialization(sink)
 
-	signData, err := apiComm.Sign(c.DefAcc, sink.Bytes())
+	signData, err := common.Sign(c.DefAcc, sink.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("FileReadSettleSlice Sign error: %s", err.Error())
 	}
@@ -828,7 +828,7 @@ func (c *Core) PollForTxConfirmed(timeout time.Duration, txHash []byte) (bool, e
 	if len(txHash) == 0 {
 		return false, fmt.Errorf("txHash is empty")
 	}
-	txHashStr := hex.EncodeToString(common.ToArrayReverse(txHash))
+	txHashStr := hex.EncodeToString(ccom.ToArrayReverse(txHash))
 	secs := int(timeout / time.Second)
 	if secs <= 0 {
 		secs = 1
