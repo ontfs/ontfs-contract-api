@@ -11,7 +11,6 @@ import (
 	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontology-go-sdk/utils"
-	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
 
 )
@@ -43,7 +42,6 @@ var action = struct {
 }{}
 
 func main() {
-	log.InitLog(log.InfoLog, ".")
 	flag.BoolVar(&action.getGlobalParam, "getGlobalParam", false, "getGlobalParam")
 	flag.BoolVar(&action.getNodeInfoList, "getNodeInfoList", false, "getNodeInfoList")
 	flag.BoolVar(&action.getPdpInfoList, "getPdpInfoList", false, "getPdpInfoList")
@@ -68,7 +66,7 @@ func main() {
 
 	fsClient = core.Init("./wallet.dat", "pwd", "http://127.0.0.1:20336", 0, 20000)
 	if fsClient == nil {
-		log.Error("Init error")
+		fmt.Println("Init error")
 		return
 	}
 
@@ -107,7 +105,7 @@ func CreateSpace() {
 	timeExpired := uint64(time.Now().Unix()) + 3600*24
 	txHash, err := fsClient.CreateSpace(1024*1024, 3, DefaultPdpInterval, timeExpired)
 	if err != nil {
-		log.Error("CreateSpace error: ", err.Error())
+		fmt.Println("CreateSpace error: ", err.Error())
 		return
 	}
 	fsClient.PollForTxConfirmed(15*time.Second, txHash)
@@ -117,7 +115,7 @@ func CreateSpace() {
 func GetSpaceInfo() {
 	spaceInfo, err := fsClient.GetSpaceInfo()
 	if err != nil {
-		log.Error("GetSpaceInfo error: ", err.Error())
+		fmt.Println("GetSpaceInfo error: ", err.Error())
 		return
 	}
 	common.PrintStruct(*spaceInfo)
@@ -126,22 +124,22 @@ func GetSpaceInfo() {
 func DeleteSpace() {
 	txHash, err := fsClient.DeleteSpace()
 	if err != nil {
-		log.Error("DeleteSpace error: ", err.Error())
+		fmt.Println("DeleteSpace error: ", err.Error())
 		return
 	}
 	fsClient.PollForTxConfirmed(15*time.Second, txHash)
 	spaceInfo, err := fsClient.GetSpaceInfo()
 	if err != nil && spaceInfo == nil {
-		log.Info("DeleteSpace success")
+		fmt.Println("DeleteSpace success")
 	} else {
-		log.Error("DeleteSpace failed")
+		fmt.Println("DeleteSpace failed")
 	}
 }
 
 func UpdateSpace() {
 	spaceInfo1, err := fsClient.GetSpaceInfo()
 	if err != nil {
-		log.Error("UpdateSpace GetSpaceInfo1 error: ", err.Error())
+		fmt.Println("UpdateSpace GetSpaceInfo1 error: ", err.Error())
 		return
 	}
 	common.PrintStruct(*spaceInfo1)
@@ -149,22 +147,22 @@ func UpdateSpace() {
 	timeExpired := uint64(time.Now().Unix()) + 3600*24
 	txHash, err := fsClient.UpdateSpace(1024*2048, timeExpired)
 	if err != nil {
-		log.Error("UpdateSpace error: ", err.Error())
+		fmt.Println("UpdateSpace error: ", err.Error())
 		return
 	}
 	fsClient.PollForTxConfirmed(15*time.Second, txHash)
 
 	spaceInfo2, err := fsClient.GetSpaceInfo()
 	if err != nil {
-		log.Error("UpdateSpace GetSpaceInfo2 error: ", err.Error())
+		fmt.Println("UpdateSpace GetSpaceInfo2 error: ", err.Error())
 		return
 	}
 	common.PrintStruct(*spaceInfo2)
 
 	if spaceInfo1.Volume != spaceInfo2.Volume || spaceInfo1.TimeExpired != spaceInfo2.TimeExpired {
-		log.Info("UpdateSpace Success")
+		fmt.Println("UpdateSpace Success")
 	} else {
-		log.Error("UpdateSpace Failed")
+		fmt.Println("UpdateSpace Failed")
 	}
 }
 
@@ -172,7 +170,7 @@ func GetGlobalParam() {
 	var err error
 	globalParam, err = fsClient.GetGlobalParam()
 	if err != nil {
-		log.Errorf("APP GetGlobalParam error: %s", err.Error())
+		fmt.Printf("APP GetGlobalParam error: %s\n", err.Error())
 		return
 	}
 	common.PrintStruct(*globalParam)
@@ -181,10 +179,10 @@ func GetGlobalParam() {
 func GetNodeInfoList() {
 	nodeInfoList, err := fsClient.GetNodeInfoList(9999999)
 	if err != nil {
-		log.Errorf("APP GetNodeInfoList error: %s", err.Error())
+		fmt.Printf("APP GetNodeInfoList error: %s\n", err.Error())
 		return
 	} else {
-		log.Infof("NodeInfoListLen: %d", len(nodeInfoList.NodesInfo))
+		fmt.Printf("NodeInfoListLen: %d\n", len(nodeInfoList.NodesInfo))
 		for _, nodeInfo := range nodeInfoList.NodesInfo {
 			common.PrintStruct(nodeInfo)
 		}
@@ -194,11 +192,11 @@ func GetNodeInfoList() {
 func GetFileList() {
 	fileHashList, err := fsClient.GetFileList()
 	if err != nil {
-		log.Errorf("APP GetFileList error: %s", err.Error())
+		fmt.Printf("APP GetFileList error: %s\n", err.Error())
 		return
 	} else {
 		for _, fileHash := range fileHashList.FilesH {
-			log.Infof("FileHash: %s", string(fileHash.FHash))
+			fmt.Printf("FileHash: %s\n", fmt.Sprintf("%s", fileHash.FHash))
 		}
 	}
 }
@@ -221,12 +219,12 @@ func StoreFile() {
 
 	_, err, storeErrors := fsClient.StoreFiles(fileStores)
 	if err != nil {
-		log.Error("StoreFile error: ", err.Error())
+		fmt.Println("StoreFile error: ", err.Error())
 		return
 	}
 
 	if len(storeErrors.ObjectErrors) == 0 {
-		fmt.Printf("StoreFile no object error\n")
+		fmt.Printf("StoreFile success\n")
 		return
 	}
 	for k, v := range storeErrors.ObjectErrors  {
@@ -235,15 +233,15 @@ func StoreFile() {
 
 	once.Do(func() {
 		if err := connectFs(); err != nil {
-			log.Error("connectFs error: ", err.Error())
+			fmt.Println("connectFs error: ", err.Error())
 			os.Exit(0)
 		}
-		log.Info("connection success")
+		fmt.Println("connection success")
 	},
 	)
 
 	if err = sendToFs("StoreFile" + "|" + TestFileHash); err != nil {
-		log.Error("sendToFs error: ", err.Error())
+		fmt.Println("sendToFs error: ", err.Error())
 		return
 	}
 	closeConn()
@@ -252,19 +250,19 @@ func StoreFile() {
 func GetFileInfo(fileHash string) {
 	fileInfo, err := fsClient.GetFileInfo(fileHash)
 	if err != nil {
-		log.Errorf("GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
+		fmt.Printf("GetFileInfo fileHash: %s error: %s\n", fileHash, err.Error())
 		return
 	}
 	common.PrintStruct(*fileInfo)
 
 	filePdpNeedCount := (fileInfo.TimeExpired-fileInfo.TimeStart)/fileInfo.PdpInterval + 1
-	log.Infof("TotalPdpNeedCount: %d", filePdpNeedCount)
+	fmt.Printf("TotalPdpNeedCount: %d\n", filePdpNeedCount)
 }
 
 func RenewFile(fileHash string) {
 	fileInfo, err := fsClient.GetFileInfo(fileHash)
 	if err != nil {
-		log.Errorf("RenewFile GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
+		fmt.Printf("RenewFile GetFileInfo fileHash: %s error: %s\n", fileHash, err.Error())
 		return
 	}
 
@@ -276,12 +274,12 @@ func RenewFile(fileHash string) {
 	}
 	_, err, renewErrors := fsClient.RenewFiles(fileRenew)
 	if err != nil {
-		log.Error("RenewFile error: ", err.Error())
+		fmt.Println("RenewFile error: ", err.Error())
 		return
 	}
 
 	if len(renewErrors.ObjectErrors) == 0 {
-		fmt.Printf("RenewFiles no object error\n")
+		fmt.Printf("RenewFiles success\n")
 		return
 	}
 	for k, v := range renewErrors.ObjectErrors  {
@@ -292,12 +290,12 @@ func RenewFile(fileHash string) {
 func DeleteFile(fileHash string) {
 	_, err, delErrors := fsClient.DeleteFiles([]string{fileHash})
 	if err != nil {
-		log.Error("DeleteFile error: ", err.Error())
+		fmt.Println("DeleteFile error: ", err.Error())
 		return
 	}
 
 	if len(delErrors.ObjectErrors) == 0 {
-		fmt.Printf("DeleteFile no object error\n")
+		fmt.Printf("DeleteFile success\n")
 		return
 	}
 	for k, v := range delErrors.ObjectErrors  {
@@ -309,7 +307,7 @@ func DeleteFile(fileHash string) {
 func TransferFile(fileHash string, newOwner string) {
 	newOwnerAddr, err := utils.AddressFromBase58(newOwner)
 	if err != nil {
-		log.Error("ChangeOwner AddressFromBase58 error: ", err.Error())
+		fmt.Println("ChangeOwner AddressFromBase58 error: ", err.Error())
 		return
 	}
 
@@ -322,11 +320,11 @@ func TransferFile(fileHash string, newOwner string) {
 
 	_, err, transferErrors := fsClient.TransferFiles(fileTransfer)
 	if err != nil {
-		log.Error("ChangeOwner error: ", err.Error())
+		fmt.Println("ChangeOwner error: ", err.Error())
 		return
 	}
 	if len(transferErrors.ObjectErrors) == 0 {
-		fmt.Printf("TransferFile no object error\n")
+		fmt.Printf("TransferFile success\n")
 		return
 	}
 	for k, v := range transferErrors.ObjectErrors  {
@@ -337,7 +335,7 @@ func TransferFile(fileHash string, newOwner string) {
 func GetPdpInfoList(fileHash string) {
 	pdpRecordList, err := fsClient.GetFilePdpRecordList(fileHash)
 	if err != nil {
-		log.Errorf("APP GetFilePdpRecordList error: %s", err.Error())
+		fmt.Printf("APP GetFilePdpRecordList error: %s\n", err.Error())
 		return
 	} else {
 		for _, pdpRecord := range pdpRecordList.PdpRecords {
@@ -349,16 +347,16 @@ func GetPdpInfoList(fileHash string) {
 func ReadFile(fileHash string) {
 	fileInfo, err := fsClient.GetFileInfo(fileHash)
 	if err != nil {
-		log.Errorf("StoreFile GetFileInfo fileHash: %s error: %s", fileHash, err.Error())
+		fmt.Printf("StoreFile GetFileInfo fileHash: %s error: %s\n", fileHash, err.Error())
 		return
 	} else if fileInfo == nil {
-		log.Error("StoreFile GetFileInfo failed, fileInfo is nil")
+		fmt.Println("StoreFile GetFileInfo failed, fileInfo is nil")
 		return
 	}
 
 	pdpRecordList, err := fsClient.GetFilePdpRecordList(fileHash)
 	if err != nil {
-		log.Errorf("APP GetFilePdpRecordList error: %s", err.Error())
+		fmt.Printf("APP GetFilePdpRecordList error: %s\n", err.Error())
 		return
 	} else {
 		for _, pdpRecord := range pdpRecordList.PdpRecords {
@@ -375,7 +373,7 @@ func ReadFile(fileHash string) {
 	}
 	readTx, err := fsClient.FileReadPledge(fileHash, readPlans)
 	if err != nil {
-		log.Error("FileReadPledge failed error: ", err.Error())
+		fmt.Println("FileReadPledge failed error: ", err.Error())
 		return
 	}
 	fsClient.PollForTxConfirmed(14*time.Second, readTx)
@@ -383,7 +381,7 @@ func ReadFile(fileHash string) {
 	haveReadBlockNum := uint64(0)
 	readPledge, err := fsClient.GetFileReadPledge(fileHash, fsClient.WalletAddr)
 	if err != nil {
-		log.Error("GetFileReadPledge failed error: ", err.Error())
+		fmt.Println("GetFileReadPledge failed error: ", err.Error())
 		return
 	}
 	for _, readPlan := range readPledge.ReadPlans {
@@ -394,28 +392,28 @@ func ReadFile(fileHash string) {
 
 	once.Do(func() {
 		if err := connectFs(); err != nil {
-			log.Error("connectFs error: ", err.Error())
+			fmt.Println("connectFs error: ", err.Error())
 			os.Exit(0)
 		}
-		log.Info("connection success")
+		fmt.Println("connection success")
 	},
 	)
 
 	if err = sendToFs("ReadFile" + "|" + fileHash + "|" + fsClient.WalletAddr.ToBase58()); err != nil {
-		log.Error("sendToFs error: ", err.Error())
+		fmt.Println("sendToFs error: ", err.Error())
 		return
 	}
 
 	for i := uint64(0); i < fileInfo.FileBlockCount; i++ {
 		fileReadSlice, err := fsClient.GenFileReadSettleSlice([]byte(fileHash), readPlans[0].NodeAddr, i+haveReadBlockNum, 1)
 		if err != nil {
-			log.Errorf("GenFileReadSettleSlice error: %s", err.Error())
+			fmt.Printf("GenFileReadSettleSlice error: %s\n", err.Error())
 			return
 		}
 		sliceData := common.FileReadSettleSliceSerialize(fileReadSlice)
 		sliceString := hex.EncodeToString(sliceData)
 
-		log.Info("sendToFs FileReadSettleSlice")
+		fmt.Println("sendToFs FileReadSettleSlice")
 		sendToFs(sliceString)
 	}
 	closeConn()
