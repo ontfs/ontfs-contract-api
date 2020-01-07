@@ -23,6 +23,7 @@ var globalParam *ontfs.FsGlobalParam
 var once sync.Once
 
 var action = struct {
+	rpcAddr         string
 	getGlobalParam  bool
 	getNodeInfoList bool
 	getFileList     bool
@@ -42,6 +43,7 @@ var action = struct {
 }{}
 
 func main() {
+	flag.StringVar(&action.rpcAddr, "rpcAddr", "", "rpcAddr")
 	flag.BoolVar(&action.getGlobalParam, "getGlobalParam", false, "getGlobalParam")
 	flag.BoolVar(&action.getNodeInfoList, "getNodeInfoList", false, "getNodeInfoList")
 	flag.BoolVar(&action.getPdpInfoList, "getPdpInfoList", false, "getPdpInfoList")
@@ -64,7 +66,7 @@ func main() {
 	flag.StringVar(&action.newOwner, "newOwner", "", "   changeOwner - newOwner")
 	flag.Parse()
 
-	fsClient = core.Init("./wallet.dat", "pwd", "http://127.0.0.1:20336", 0, 20000)
+	fsClient = core.Init("./wallet.dat", "pwd", action.rpcAddr, 20000, 20000)
 	if fsClient == nil {
 		fmt.Println("Init error")
 		return
