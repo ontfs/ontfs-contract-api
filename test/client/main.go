@@ -3,16 +3,15 @@ package main
 import (
 	"encoding/hex"
 	"flag"
+	"fmt"
 	"os"
 	"sync"
 	"time"
-	"fmt"
 
 	"github.com/ontio/ontfs-contract-api/common"
 	"github.com/ontio/ontfs-contract-api/core"
 	"github.com/ontio/ontology-go-sdk/utils"
 	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
-
 )
 
 const TestFileHash = "FileTest"
@@ -207,7 +206,7 @@ func StoreFile() {
 	timeExpired := uint64(time.Now().Unix()) + 3600
 	fileStores := []common.FileStore{
 		{
-			FileHash:      TestFileHash,
+			FileHash:       TestFileHash,
 			FileDesc:       TestFileHash,
 			FileBlockCount: 256,
 			RealFileSize:   256*256 + 256,
@@ -229,7 +228,7 @@ func StoreFile() {
 		fmt.Printf("StoreFile success\n")
 		return
 	}
-	for k, v := range storeErrors.ObjectErrors  {
+	for k, v := range storeErrors.ObjectErrors {
 		fmt.Printf("%s | %s\n", k, v)
 	}
 
@@ -270,8 +269,8 @@ func RenewFile(fileHash string) {
 
 	fileRenew := []common.FileRenew{
 		{
-			FileHash:      fileHash,
-			RenewTime:     fileInfo.TimeExpired+1024,
+			FileHash:  fileHash,
+			RenewTime: fileInfo.TimeExpired + 1024,
 		},
 	}
 	_, err, renewErrors := fsClient.RenewFiles(fileRenew)
@@ -284,7 +283,7 @@ func RenewFile(fileHash string) {
 		fmt.Printf("RenewFiles success\n")
 		return
 	}
-	for k, v := range renewErrors.ObjectErrors  {
+	for k, v := range renewErrors.ObjectErrors {
 		fmt.Printf("%s | %s\n", k, v)
 	}
 }
@@ -300,7 +299,7 @@ func DeleteFile(fileHash string) {
 		fmt.Printf("DeleteFile success\n")
 		return
 	}
-	for k, v := range delErrors.ObjectErrors  {
+	for k, v := range delErrors.ObjectErrors {
 		fmt.Printf("%s | %s\n", k, v)
 	}
 
@@ -315,8 +314,8 @@ func TransferFile(fileHash string, newOwner string) {
 
 	fileTransfer := []common.FileTransfer{
 		{
-			FileHash:      fileHash,
-			NewOwner:      newOwnerAddr,
+			FileHash: fileHash,
+			NewOwner: newOwnerAddr,
 		},
 	}
 
@@ -329,7 +328,7 @@ func TransferFile(fileHash string, newOwner string) {
 		fmt.Printf("TransferFile success\n")
 		return
 	}
-	for k, v := range transferErrors.ObjectErrors  {
+	for k, v := range transferErrors.ObjectErrors {
 		fmt.Printf("%s | %s\n", k, v)
 	}
 }

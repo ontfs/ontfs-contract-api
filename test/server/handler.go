@@ -1,14 +1,15 @@
 package main
 
 import (
-	"encoding/hex"
-	"github.com/ontio/ontfs-contract-api/common"
-	"github.com/ontio/ontology-go-sdk/utils"
-	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
 	"log"
 	"net"
 	"strings"
 	"time"
+
+	"encoding/hex"
+	"github.com/ontio/ontfs-contract-api/common"
+	"github.com/ontio/ontology-go-sdk/utils"
+	"github.com/ontio/ontology/smartcontract/service/native/ontfs"
 )
 
 func FsServer() {
@@ -67,7 +68,7 @@ func PDP(fileHash string) {
 	fileHashStr := string(fileInfo.FileHash)
 
 	log.Printf("FileProve first time")
-	_, err = fsCore.FileProve(fileHashStr, []byte("test"),  8)
+	_, err = fsCore.FileProve(fileHashStr, []byte("test"), 8)
 	if err != nil {
 		log.Printf("First FileProve error: %s", err.Error())
 	}

@@ -15,8 +15,8 @@ type FileStore struct {
 }
 
 type FileRenew struct {
-	FileHash    string
-	RenewTime   uint64
+	FileHash  string
+	RenewTime uint64
 }
 
 type FileTransfer struct {

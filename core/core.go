@@ -13,12 +13,14 @@ import (
 	ccom "github.com/ontio/ontology/common"
 	fs "github.com/ontio/ontology/smartcontract/service/native/ontfs"
 	"github.com/ontio/ontology/smartcontract/service/native/utils"
+	"strings"
 )
 
 const contractVersion = byte(0)
 const defaultMinPdpInterval = uint64(10 * 60)
 
 var contractAddr ccom.Address
+var contractAddrStr string
 
 type Core struct {
 	WalletPath    string
@@ -34,6 +36,8 @@ type Core struct {
 
 func Init(walletPath string, walletPwd string, ontRpcSrvAddr string, gasPrice uint64, gasLimit uint64) *Core {
 	contractAddr = utils.OntFSContractAddress
+	contractAddrStr = contractAddr.ToHexString()
+
 	ontFs := &Core{
 		WalletPath:    walletPath,
 		Password:      []byte(walletPwd),
@@ -94,14 +98,14 @@ func (c *Core) NodeRegister(volume uint64, serviceTime uint64, minPdpInterval ui
 		return nil, errors.New("NodeRegister DefAcc is nil")
 	}
 	fsNodeInfo := fs.FsNodeInfo{
-		Pledge: 0,
-		Profit: 0,
-		Volume: volume,
-		RestVol: 0,
-		ServiceTime: serviceTime,
+		Pledge:         0,
+		Profit:         0,
+		Volume:         volume,
+		RestVol:        0,
+		ServiceTime:    serviceTime,
 		MinPdpInterval: minPdpInterval,
-		NodeAddr: c.WalletAddr,
-		NodeNetAddr: []byte(nodeNetAddr),
+		NodeAddr:       c.WalletAddr,
+		NodeNetAddr:    []byte(nodeNetAddr),
 	}
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
@@ -146,14 +150,14 @@ func (c *Core) NodeUpdate(volume uint64, serviceTime uint64, minPdpInterval uint
 		return nil, errors.New("NodeUpdate DefAcc is nil")
 	}
 	fsNodeInfo := fs.FsNodeInfo{
-		Pledge: 0,
-		Profit: 0,
-		Volume: volume,
-		RestVol: 0,
-		ServiceTime: serviceTime,
+		Pledge:         0,
+		Profit:         0,
+		Volume:         volume,
+		RestVol:        0,
+		ServiceTime:    serviceTime,
 		MinPdpInterval: minPdpInterval,
-		NodeAddr: c.WalletAddr,
-		NodeNetAddr: []byte(nodeNetAddr),
+		NodeAddr:       c.WalletAddr,
+		NodeNetAddr:    []byte(nodeNetAddr),
 	}
 
 	txHash, err := c.OntSdk.Native.InvokeNativeContract(c.GasPrice, c.GasLimit, c.DefAcc, contractVersion, contractAddr,
@@ -586,10 +590,15 @@ func (c *Core) StoreFiles(filesInfo []common.FileStore) ([]byte, error, *fs.Erro
 		return txHash.ToArray(), err, nil
 	}
 
+	var errorData string
+	for _, notify := range event.Notify  {
+		if 0 == strings.Compare(contractAddrStr, notify.ContractAddress) {
+			errorData = notify.States.(string)
+		}
+	}
+
 	var objErrors fs.Errors
-	errorDataIndex := len(event.Notify) - 1
-	errorData, ok := event.Notify[errorDataIndex].States.(string)
-	if !ok {
+	if len(errorData) == 0 {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}
@@ -631,10 +640,15 @@ func (c *Core) TransferFiles(fileTransfers []common.FileTransfer) ([]byte, error
 		return txHash.ToArray(), err, nil
 	}
 
+	var errorData string
+	for _, notify := range event.Notify  {
+		if 0 == strings.Compare(contractAddrStr, notify.ContractAddress) {
+			errorData = notify.States.(string)
+		}
+	}
+
 	var objErrors fs.Errors
-	errorDataIndex := len(event.Notify) - 1
-	errorData, ok := event.Notify[errorDataIndex].States.(string)
-	if !ok {
+	if len(errorData) == 0 {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}
@@ -677,10 +691,15 @@ func (c *Core) RenewFiles(filesRenew []common.FileRenew) ([]byte, error, *fs.Err
 		return txHash.ToArray(), err, nil
 	}
 
+	var errorData string
+	for _, notify := range event.Notify  {
+		if 0 == strings.Compare(contractAddrStr, notify.ContractAddress) {
+			errorData = notify.States.(string)
+		}
+	}
+
 	var objErrors fs.Errors
-	errorDataIndex := len(event.Notify) - 1
-	errorData, ok := event.Notify[errorDataIndex].States.(string)
-	if !ok {
+	if len(errorData) == 0 {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}
@@ -717,10 +736,15 @@ func (c *Core) DeleteFiles(fileHashes []string) ([]byte, error, *fs.Errors) {
 		return txHash.ToArray(), err, nil
 	}
 
+	var errorData string
+	for _, notify := range event.Notify  {
+		if 0 == strings.Compare(contractAddrStr, notify.ContractAddress) {
+			errorData = notify.States.(string)
+		}
+	}
+
 	var objErrors fs.Errors
-	errorDataIndex := len(event.Notify) - 1
-	errorData, ok := event.Notify[errorDataIndex].States.(string)
-	if !ok {
+	if len(errorData) == 0 {
 		err := fmt.Errorf("GetSmartContractEvent error")
 		return txHash.ToArray(), err, nil
 	}

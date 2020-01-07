@@ -74,7 +74,7 @@ func GetGlobalParam() {
 
 func RegisterNode() {
 	serviceDueTime := time.Now().Unix() + 100000
-	_, err := fsCore.NodeRegister(1024*1024*1024, uint64(serviceDueTime), 4 * 60 * 60, "tcp://10.0.1.66:3389")
+	_, err := fsCore.NodeRegister(1024*1024*1024, uint64(serviceDueTime), 4*60*60, "tcp://10.0.1.66:3389")
 	if err != nil {
 		log.Errorf("NodeRegister error: %s", err.Error())
 		return
@@ -93,7 +93,7 @@ func QueryNode() {
 
 func UpdateNode() {
 	serviceDueTime := time.Now().Unix() + 100000
-	_, err := fsCore.NodeUpdate(1024*1024*1024, uint64(serviceDueTime), 4 * 60 * 60,"tcp://10.0.1.66:1004")
+	_, err := fsCore.NodeUpdate(1024*1024*1024, uint64(serviceDueTime), 4*60*60, "tcp://10.0.1.66:1004")
 	if err != nil {
 		log.Errorf("NodeUpdate error: %s", err.Error())
 		return
