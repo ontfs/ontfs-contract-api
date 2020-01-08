@@ -8,6 +8,7 @@ type FileStore struct {
 	FileBlockCount uint64
 	RealFileSize   uint64
 	CopyNumber     uint64
+	FirstPdp       bool
 	PdpInterval    uint64
 	TimeExpired    uint64
 	PdpParam       []byte

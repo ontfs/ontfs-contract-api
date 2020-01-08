@@ -563,6 +563,7 @@ func (c *Core) StoreFiles(filesInfo []common.FileStore) ([]byte, error, *fs.Erro
 			FileBlockCount: fileInfo.FileBlockCount,
 			RealFileSize:   fileInfo.RealFileSize,
 			CopyNumber:     fileInfo.CopyNumber,
+			FirstPdp:       fileInfo.FirstPdp,
 			PdpInterval:    fileInfo.PdpInterval,
 			TimeExpired:    fileInfo.TimeExpired,
 			PdpParam:       fileInfo.PdpParam,
